@@ -30,7 +30,7 @@ model Lead {
 
   // WhatsApp buyer feedback cross-check (PRD §5 — Leakage 1)
   whatsappSentAt      DateTime?
-  buyerFeedbackStatus String?
+  buyerFeedbackStatus BuyerFeedbackStatus?
   feedbackReceivedAt  DateTime?
 
   // Partner documentation
@@ -38,6 +38,25 @@ model Lead {
   visitPhotoUrls      String[]
   closureDocumentUrls String[]
   partnerNotes        String?
+
+  // 7-day re-ping for STILL_DECIDING (Appendix C.4)
+  secondFollowupSentAt DateTime?
+
+  // Two-tier drop system (Appendix C.2)
+  dropRequestedByPartner Boolean   @default(false)
+  dropRequestNote        String?
+  dropRequestedAt        DateTime?
+  droppedReason          String?
+  droppedAt              DateTime?
+  droppedByAdminId       String?   @db.ObjectId
+
+  // Commission summary (Phase 2 — §3.3)
+  platformCommissionPct Float?
+  commissionAmountPaise Int?
+  commissionStatus      CommissionStatus @default(PENDING)
+  invoiceUrl            String?
+  invoicedAt            DateTime?
+  collectedAt           DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,4 +67,11 @@ model Lead {
   @@index([buyerId])
   @@index([status])
   @@index([propertyId])
+  @@index([buyerFeedbackStatus])
+  @@index([dropRequestedByPartner])
+  @@index([assignedPartnerId, status])
+  @@index([status, createdAt])
+  @@index([propertyId, status])
+  @@index([buyerId, createdAt])
+  @@index([commissionStatus])
 }

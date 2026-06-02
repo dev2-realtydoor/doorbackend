@@ -66,4 +66,25 @@ async function verifyTicket(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getDocuments, uploadDocument, getSubscriptions, raiseTicket, verifyTicket };
+async function createLoanApplication(req, res, next) {
+  try {
+    const loan = await service.createLoanApplication(req.user.id, req.body);
+    created(res, loan, 'Loan application submitted');
+  } catch (err) { next(err); }
+}
+
+async function getMyLoanApplications(req, res, next) {
+  try {
+    const loans = await service.getMyLoanApplications(req.user.id);
+    success(res, loans);
+  } catch (err) { next(err); }
+}
+
+async function getLoanApplicationById(req, res, next) {
+  try {
+    const loan = await service.getLoanApplicationById(req.user.id, req.params.id);
+    success(res, loan);
+  } catch (err) { next(err); }
+}
+
+module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getDocuments, uploadDocument, getSubscriptions, raiseTicket, verifyTicket, createLoanApplication, getMyLoanApplications, getLoanApplicationById };

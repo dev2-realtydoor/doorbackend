@@ -51,6 +51,8 @@ model Property {
   images          String[]
   coverImageIndex Int      @default(0)
   floorPlanUrl    String?
+  virtualTourUrl  String?
+  videoUrl        String?
 
   // Amenities
   amenities       String[]
@@ -59,6 +61,9 @@ model Property {
   // SEO
   metaTitle       String?
   metaDescription String?
+
+  // B2B (Phase 2)
+  commissionSplitOffer String?
 
   // Ownership
   partnerId String @db.ObjectId
@@ -70,11 +75,20 @@ model Property {
   leads               Lead[]
   favorites           Favorite[]
   constructionUpdates ConstructionUpdate[]
+  editLogs            PropertyEditLog[]
+  loanApplications    LoanApplication[]
+  b2bConnections      B2BConnection[]
+  videoTourRequests   VideoTourRequest[]
 
   @@index([publishStatus, isB2BOnly])
   @@index([partnerId])
   @@index([city, publishStatus])
   @@index([isFeatured])
+  @@index([city, locality, publishStatus])
+  @@index([propertyType, listingType, publishStatus])
+  @@index([city, propertyType, listingType, publishStatus])
+  @@index([partnerId, publishStatus])
+  @@index([isFeatured, publishStatus])
 }
 
 // ─── FAVORITE ─────────────────────────────────────────────────────────────────
@@ -87,6 +101,6 @@ model Favorite {
   property   Property @relation(fields: [propertyId], references: [id])
   savedAt    DateTime @default(now())
 
+  @@unique([userId, propertyId])
   @@index([userId])
-  @@index([userId, propertyId])
 }

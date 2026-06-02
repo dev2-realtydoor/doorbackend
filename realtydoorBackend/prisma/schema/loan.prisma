@@ -1,0 +1,33 @@
+// ─── LOAN APPLICATION ─────────────────────────────────────────────────────────
+// User-facing loan tracker (MVP §11 /dashboard/loan).
+// Back-relations added on User and Property models.
+
+model LoanApplication {
+  id                       String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId                   String     @db.ObjectId
+  user                     User       @relation(fields: [userId], references: [id])
+  propertyId               String?    @db.ObjectId
+  property                 Property?  @relation(fields: [propertyId], references: [id])
+
+  preferredBank            String?
+  loanAmountRequestedPaise Int?
+  sanctionedAmountPaise    Int?
+
+  status                   LoanStatus @default(DOCUMENTS_PENDING)
+  statusHistory            String[]
+  adminNote                String?
+  bankRefNumber            String?
+  sanctionedAt             DateTime?
+  disbursedAt              DateTime?
+  rejectionReason          String?
+
+  submittedDocIds          String[]
+
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([propertyId])
+}

@@ -9,16 +9,21 @@
     { "key": "baseUrl",        "value": "http://localhost:5000" },
     { "key": "authToken",      "value": "" },
     { "key": "propertyId",     "value": "664abc123def456789012345" },
-    { "key": "propertySlug",   "value": "spacious-2bhk-whitefield-1717000000000" },
+    { "key": "propertySlug",   "value": "skyline-heights-3bhk-baner-1717000000000", "description": "Update from seed output — slugs include Date.now()" },
     { "key": "leadId",         "value": "665def456abc789012345678" },
-    { "key": "partnerId",      "value": "664aaa000bbb111ccc222ddd" },
-    { "key": "userId",         "value": "666bbb111ccc222ddd333eee" },
+    { "key": "partnerId",      "value": "6a1a3213aa8de854e8acfad7", "description": "From seed output — run: npm run db:seed" },
+    { "key": "userId",         "value": "6a1a3213aa8de854e8acfad8", "description": "From seed output — run: npm run db:seed" },
     { "key": "escrowId",       "value": "66bbb111ccc222ddd333eee4" },
     { "key": "serviceId",      "value": "668ccc333ddd444eee555fff" },
     { "key": "subscriptionId", "value": "667bbb222ccc333ddd444eee" },
     { "key": "ticketId",       "value": "669ddd444eee555fff666aaa" },
     { "key": "contentId",      "value": "66ddd444eee555fff666aaab" },
-    { "key": "notificationId", "value": "66eee555fff666aaa777bbb1" }
+    { "key": "notificationId",    "value": "66eee555fff666aaa777bbb1" },
+    { "key": "adminToken",        "value": "" },
+    { "key": "adminId",           "value": "6a1a3213aa8de854e8acfad6", "description": "From seed output — run: npm run db:seed" },
+    { "key": "loanId",            "value": "" },
+    { "key": "localityInsightId", "value": "" },
+    { "key": "targetUserId",      "value": "" }
   ],
   "auth": {
     "type": "bearer",
@@ -35,12 +40,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/properties?city=Bangalore&listingType=SALE&page=1&limit=20",
+              "raw": "{{baseUrl}}/api/properties?city=Pune&listingType=SALE&page=1&limit=20",
               "host": ["{{baseUrl}}"],
               "path": ["api","properties"],
               "query": [
                 { "key": "q",              "value": "",          "disabled": true },
-                { "key": "city",           "value": "Bangalore" },
+                { "key": "city",           "value": "Pune" },
                 { "key": "locality",       "value": "",          "disabled": true },
                 { "key": "propertyType",   "value": "",          "disabled": true },
                 { "key": "listingType",    "value": "SALE" },
@@ -64,7 +69,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0001" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"price\":5500000,\"monthlyRent\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"bhk\":2,\"carpetArea\":950,\"locality\":\"Whitefield\",\"city\":\"Bangalore\",\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/sample.jpg\"],\"coverImageIndex\":0,\"isVerified\":true,\"isFeatured\":false,\"reraNumber\":\"PRM/KA/RERA/1251/446/PR/171015/000015\",\"createdAt\":\"2026-05-01T10:00:00.000Z\"}],\"pagination\":{\"total\":45,\"page\":1,\"limit\":20,\"totalPages\":3,\"hasNext\":true,\"hasPrev\":false}}}"
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"price\":8500000,\"monthlyRent\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"bhk\":3,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"coverImageIndex\":0,\"isVerified\":true,\"isFeatured\":true,\"reraNumber\":\"P52100012345\",\"createdAt\":\"2026-05-01T10:00:00.000Z\"}],\"pagination\":{\"total\":4,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
             }
           ]
         },
@@ -83,7 +88,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0002" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"price\":5500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"bhk\":2,\"carpetArea\":950,\"locality\":\"Whitefield\",\"city\":\"Bangalore\",\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/sample.jpg\"],\"isVerified\":true,\"isFeatured\":true}]}"
+              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"bhk\":3,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"isVerified\":true,\"isFeatured\":true}]}"
             }
           ]
         },
@@ -102,7 +107,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0003" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"description\":\"Well-ventilated 2BHK flat with great amenities.\",\"price\":5500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"bhk\":2,\"bathrooms\":2,\"carpetArea\":950,\"builtUpArea\":1100,\"floorNumber\":4,\"totalFloors\":12,\"furnishing\":\"SEMI_FURNISHED\",\"facing\":\"East\",\"address\":\"Brigade Gateway, Whitefield\",\"locality\":\"Whitefield\",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"pincode\":\"560066\",\"latitude\":12.9698,\"longitude\":77.7499,\"nearbyLandmarks\":[\"ITPL - 1.2km\",\"Phoenix Mall - 3km\"],\"isVerified\":true,\"reraNumber\":\"PRM/KA/RERA/1251/446\",\"bankApprovals\":[\"HDFC\",\"SBI\"],\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/sample.jpg\"],\"amenities\":[\"Power Backup\",\"Gym\",\"Swimming Pool\"],\"partner\":{\"companyName\":\"Ravi Properties Pvt Ltd\",\"partnerSubType\":\"AGENT\"},\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"description\":\"Spacious 3 BHK apartment in the heart of Baner with premium amenities, ample parking, and excellent connectivity to Hinjewadi IT Park.\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"bhk\":3,\"bathrooms\":2,\"carpetArea\":1200,\"builtUpArea\":1450,\"floorNumber\":4,\"totalFloors\":12,\"furnishing\":\"Semi-Furnished\",\"facing\":\"East\",\"address\":\"Skyline Heights, Plot 12, Baner Road\",\"locality\":\"Baner\",\"city\":\"Pune\",\"state\":\"Maharashtra\",\"pincode\":\"411045\",\"latitude\":18.5596,\"longitude\":73.7769,\"nearbyLandmarks\":[\"D-Mart Baner\",\"Orchid School\",\"Baner Metro Station\"],\"isVerified\":true,\"reraNumber\":\"P52100012345\",\"bankApprovals\":[\"SBI\",\"HDFC\",\"ICICI\"],\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"amenities\":[\"Gymnasium\",\"Swimming Pool\",\"24x7 Security\",\"CCTV\",\"Power Backup\"],\"partner\":{\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\"},\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
             },
             {
               "name": "404 – Not Found",
@@ -121,7 +126,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Spacious 2BHK in Whitefield\",\n  \"description\": \"Well-ventilated 2BHK flat with great amenities, natural light, and easy access to ITPL Tech Park.\",\n  \"price\": 5500000,\n  \"propertyType\": \"FLAT\",\n  \"listingType\": \"SALE\",\n  \"propertyStatus\": \"READY_TO_MOVE\",\n  \"bhk\": 2,\n  \"bathrooms\": 2,\n  \"carpetArea\": 950,\n  \"builtUpArea\": 1100,\n  \"floorNumber\": 4,\n  \"totalFloors\": 12,\n  \"ageOfProperty\": 3,\n  \"furnishing\": \"SEMI_FURNISHED\",\n  \"facing\": \"East\",\n  \"address\": \"Brigade Gateway, Whitefield Main Road\",\n  \"locality\": \"Whitefield\",\n  \"city\": \"Bangalore\",\n  \"state\": \"Karnataka\",\n  \"pincode\": \"560066\",\n  \"latitude\": 12.9698,\n  \"longitude\": 77.7499,\n  \"nearbyLandmarks\": [\"ITPL - 1.2km\", \"Phoenix Marketcity - 3km\"],\n  \"reraNumber\": \"PRM/KA/RERA/1251/446/PR/171015/000015\",\n  \"bankApprovals\": [\"HDFC\", \"SBI\"],\n  \"amenities\": [\"Power Backup\", \"Gym\", \"Swimming Pool\", \"24H Security\"]\n}",
+              "raw": "{\n  \"title\": \"3 BHK Flat in Baner\",\n  \"description\": \"Spacious 3 BHK apartment in the heart of Baner with premium amenities, ample parking, and excellent connectivity to Hinjewadi IT Park.\",\n  \"price\": 8500000,\n  \"propertyType\": \"FLAT\",\n  \"listingType\": \"SALE\",\n  \"propertyStatus\": \"READY_TO_MOVE\",\n  \"bhk\": 3,\n  \"bathrooms\": 2,\n  \"carpetArea\": 1200,\n  \"builtUpArea\": 1450,\n  \"floorNumber\": 4,\n  \"totalFloors\": 12,\n  \"ageOfProperty\": 2,\n  \"furnishing\": \"Semi-Furnished\",\n  \"facing\": \"East\",\n  \"address\": \"Skyline Heights, Plot 12, Baner Road\",\n  \"locality\": \"Baner\",\n  \"city\": \"Pune\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"411045\",\n  \"latitude\": 18.5596,\n  \"longitude\": 73.7769,\n  \"nearbyLandmarks\": [\"D-Mart Baner\", \"Orchid School\", \"Baner Metro Station\"],\n  \"reraNumber\": \"P52100012345\",\n  \"bankApprovals\": [\"SBI\", \"HDFC\", \"ICICI\"],\n  \"amenities\": [\"Gymnasium\", \"Swimming Pool\", \"24x7 Security\", \"Power Backup\"]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/properties", "host": ["{{baseUrl}}"], "path": ["api","properties"] }
@@ -133,7 +138,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0004" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Listing submitted for review\",\"data\":{\"id\":\"664abc123def456789012345\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"publishStatus\":\"PENDING_APPROVAL\"}}"
+              "body": "{\"success\":true,\"message\":\"Listing submitted for review\",\"data\":{\"id\":\"664abc123def456789012345\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"publishStatus\":\"PENDING_APPROVAL\"}}"
             },
             {
               "name": "403 – KYC Required",
@@ -222,7 +227,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"buyerName\": \"Priya Sharma\",\n  \"buyerEmail\": \"priya@example.com\",\n  \"buyerPhone\": \"+919876543210\",\n  \"buyerMessage\": \"I am interested in this property. Can we schedule a visit this weekend?\"\n}",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"buyerName\": \"Suresh Mehta\",\n  \"buyerEmail\": \"user@realtydoor.com\",\n  \"buyerPhone\": \"+919000000003\",\n  \"buyerMessage\": \"I am interested in this property. Can we schedule a visit this weekend?\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/leads", "host": ["{{baseUrl}}"], "path": ["api","leads"] }
@@ -234,7 +239,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0010" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"We'll reach out within 24 hours\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"UNASSIGNED\",\"propertyId\":\"664abc123def456789012345\",\"buyerName\":\"Priya Sharma\",\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+              "body": "{\"success\":true,\"message\":\"We'll reach out within 24 hours\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"UNASSIGNED\",\"propertyId\":\"664abc123def456789012345\",\"buyerName\":\"Suresh Mehta\",\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
             },
             {
               "name": "403 – Phone Not Verified",
@@ -260,7 +265,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0011" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Priya Sharma\",\"buyerEmail\":\"priya@example.com\",\"buyerPhone\":\"+91 98765 XXXXX\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"property\":{\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"locality\":\"Whitefield\",\"city\":\"Bangalore\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}]}"
+              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerEmail\":\"user@realtydoor.com\",\"buyerPhone\":\"+91 90000 XXXXX\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"locality\":\"Baner\",\"city\":\"Pune\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}]}"
             }
           ]
         },
@@ -278,7 +283,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0012" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Priya Sharma\",\"buyerEmail\":\"priya@example.com\",\"buyerPhone\":\"+91 98765 XXXXX\",\"buyerMessage\":\"I am interested in this property.\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"visitNotes\":null,\"property\":{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"locality\":\"Whitefield\",\"city\":\"Bangalore\",\"price\":5500000},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerEmail\":\"user@realtydoor.com\",\"buyerPhone\":\"+91 90000 XXXXX\",\"buyerMessage\":\"I am interested in this property.\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"visitNotes\":null,\"property\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"locality\":\"Baner\",\"city\":\"Pune\",\"price\":8500000},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
             },
             {
               "name": "404 – Not Found",
@@ -456,7 +461,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"otp\": \"482951\"\n}",
+              "raw": "{\n  \"otp\": \"7412\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/user/verify-phone/otp", "host": ["{{baseUrl}}"], "path": ["api","user","verify-phone","otp"] }
@@ -468,7 +473,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Phone number verified\",\"data\":{\"phoneVerified\":true}}"
+              "body": "{\"success\":true,\"message\":\"Phone number verified\",\"data\":{\"phoneVerified\":true,\"phone\":\"+919876543210\"}}"
             },
             {
               "name": "400 – Incorrect OTP",
@@ -502,7 +507,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0021" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"status\":\"SITE_VISIT_DONE\",\"buyerMessage\":\"I am interested in this property.\",\"property\":{\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"city\":\"Bangalore\",\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/sample.jpg\"]},\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}"
+              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"status\":\"SITE_VISIT_DONE\",\"buyerMessage\":\"I am interested in this property.\",\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"]},\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}"
             }
           ]
         },
@@ -654,6 +659,81 @@
               "body": "{\"success\":false,\"message\":\"Ticket is not yet resolved\"}"
             }
           ]
+        },
+        {
+          "name": "Apply for Loan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"preferredBank\": \"HDFC Bank\",\n  \"loanAmountRequestedPaise\": 4000000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/loan", "host": ["{{baseUrl}}"], "path": ["api","user","loan"] }
+          },
+          "response": [
+            {
+              "name": "201 – Loan Application Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0028" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Loan application submitted\",\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"propertyId\":\"664abc123def456789012345\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"createdAt\":\"2026-05-27T09:00:00.000Z\"}}"
+            },
+            {
+              "name": "403 – Phone Not Verified",
+              "status": "Forbidden", "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0028e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Phone number must be verified before applying for a loan\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Loan Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/loan", "host": ["{{baseUrl}}"], "path": ["api","user","loan"] }
+          },
+          "response": [
+            {
+              "name": "200 – My Loans",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"adminNote\":null,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\"},\"createdAt\":\"2026-05-27T09:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Loan Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/loan/{{loanId}}", "host": ["{{baseUrl}}"], "path": ["api","user","loan","{{loanId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Loan Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029b" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"sanctionedAmountPaise\":null,\"status\":\"DOCUMENTS_SUBMITTED\",\"statusHistory\":[\"DOCUMENTS_PENDING\",\"DOCUMENTS_SUBMITTED\"],\"adminNote\":\"Documents received, under verification.\",\"bankRefNumber\":null,\"sanctionedAt\":null,\"disbursedAt\":null,\"rejectionReason\":null,\"createdAt\":\"2026-05-27T09:00:00.000Z\",\"updatedAt\":\"2026-05-27T10:30:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Loan application not found\"}"
+            }
+          ]
         }
       ]
     },
@@ -708,7 +788,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0031" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"664aaa000bbb111ccc222ddd\",\"name\":\"Ravi Kumar\",\"email\":\"ravi@ravirealty.com\",\"phone\":\"+919876500000\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"partnerSubType\":\"AGENT\",\"bio\":\"8 years experience in Whitefield and Sarjapur.\",\"websiteUrl\":\"https://ravirealty.in\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-04-20T10:00:00.000Z\",\"createdAt\":\"2026-04-15T08:00:00.000Z\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"bio\":\"10 years of experience in Pune real estate market.\",\"websiteUrl\":\"https://realtypro.in\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-05-01T08:00:00.000Z\",\"createdAt\":\"2026-05-01T08:00:00.000Z\"}}"
             }
           ]
         },
@@ -719,7 +799,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"companyName\": \"Ravi Properties Pvt Ltd\",\n  \"bio\": \"8 years of experience in Whitefield, Sarjapur, and Marathahalli corridors.\",\n  \"websiteUrl\": \"https://raviproperties.in\"\n}",
+              "raw": "{\n  \"name\": \"Rajdeep Kumar\",\n  \"companyName\": \"RealtyPro Solutions\",\n  \"bio\": \"10 years of experience in Pune real estate market — Baner, Kothrud, Aundh.\",\n  \"websiteUrl\": \"https://realtypro.in\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/partner/profile", "host": ["{{baseUrl}}"], "path": ["api","partner","profile"] }
@@ -731,7 +811,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0032" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Profile updated\",\"data\":{\"id\":\"664aaa000bbb111ccc222ddd\",\"name\":\"Ravi Kumar\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"bio\":\"8 years of experience in Whitefield, Sarjapur, and Marathahalli corridors.\",\"websiteUrl\":\"https://raviproperties.in\",\"updatedAt\":\"2026-05-19T11:30:00.000Z\"}}"
+              "body": "{\"success\":true,\"message\":\"Profile updated\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"bio\":\"10 years of experience in Pune real estate market — Baner, Kothrud, Aundh.\",\"websiteUrl\":\"https://realtypro.in\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
             }
           ]
         },
@@ -756,7 +836,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0033" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"city\":\"Bangalore\",\"locality\":\"Whitefield\",\"price\":5500000,\"bhk\":2,\"createdAt\":\"2026-05-01T10:00:00.000Z\"}]}"
+              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"city\":\"Pune\",\"locality\":\"Baner\",\"price\":8500000,\"bhk\":3,\"createdAt\":\"2026-05-01T10:00:00.000Z\"}]}"
             }
           ]
         },
@@ -774,7 +854,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"slug\":\"spacious-2bhk-whitefield-1717000000000\",\"description\":\"Well-ventilated 2BHK flat.\",\"price\":5500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"bhk\":2,\"bathrooms\":2,\"carpetArea\":950,\"locality\":\"Whitefield\",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"pincode\":\"560066\",\"address\":\"Brigade Gateway\",\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/sample.jpg\"],\"amenities\":[\"Power Backup\",\"Gym\"],\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"description\":\"Spacious 3 BHK apartment in the heart of Baner with premium amenities.\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"bhk\":3,\"bathrooms\":2,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"state\":\"Maharashtra\",\"pincode\":\"411045\",\"address\":\"Skyline Heights, Plot 12, Baner Road\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"amenities\":[\"Gymnasium\",\"Swimming Pool\",\"24x7 Security\",\"Power Backup\"],\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
             },
             {
               "name": "404 – Not Found",
@@ -836,7 +916,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0040" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Priya Sharma\",\"buyerPhone\":\"+91 98765 XXXXX\",\"status\":\"UNASSIGNED\",\"isOtpVerified\":false,\"property\":{\"title\":\"Spacious 2BHK in Whitefield\",\"city\":\"Bangalore\"},\"assignedPartner\":null,\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":24,\"page\":1,\"limit\":20,\"totalPages\":2,\"hasNext\":true,\"hasPrev\":false}}}"
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerPhone\":\"+91 90000 XXXXX\",\"status\":\"UNASSIGNED\",\"isOtpVerified\":false,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"city\":\"Pune\"},\"assignedPartner\":null,\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":24,\"page\":1,\"limit\":20,\"totalPages\":2,\"hasNext\":true,\"hasPrev\":false}}}"
                 }
               ]
             },
@@ -859,7 +939,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0041" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"message\":\"Lead assigned\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"ASSIGNED\",\"assignedPartnerId\":\"664aaa000bbb111ccc222ddd\",\"assignedAt\":\"2026-05-19T11:30:00.000Z\"}}"
+                  "body": "{\"success\":true,\"message\":\"Lead assigned\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"ASSIGNED\",\"assignedPartnerId\":\"6a1a3213aa8de854e8acfad7\",\"assignedAt\":\"2026-05-19T11:30:00.000Z\"}}"
                 },
                 {
                   "name": "400 – Partner Not KYC Verified",
@@ -895,7 +975,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0042" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"Spacious 2BHK in Whitefield\",\"publishStatus\":\"PENDING_APPROVAL\",\"propertyType\":\"FLAT\",\"city\":\"Bangalore\",\"price\":5500000,\"partner\":{\"name\":\"Ravi Kumar\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"email\":\"ravi@ravirealty.com\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"publishStatus\":\"PENDING_APPROVAL\",\"propertyType\":\"FLAT\",\"city\":\"Pune\",\"price\":8500000,\"partner\":{\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"email\":\"partner@realtydoor.com\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
                 }
               ]
             },
@@ -939,6 +1019,29 @@
                   "body": "{\"success\":true,\"message\":\"Property rejected\",\"data\":{\"id\":\"664abc123def456789012345\",\"publishStatus\":\"REJECTED\",\"rejectionNote\":\"Cover photo is blurry. Please re-upload with a clear exterior shot.\"}}"
                 }
               ]
+            },
+            {
+              "name": "Edit Property (Admin)",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"price\": 9000000,\n  \"title\": \"3 BHK Flat in Baner – Updated\",\n  \"description\": \"Recently renovated with new flooring and modular kitchen.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/properties/{{propertyId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","properties","{{propertyId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Property Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0044b" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Property updated\",\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner – Updated\",\"price\":9000000,\"publishStatus\":\"APPROVED\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+                }
+              ]
             }
           ]
         },
@@ -964,7 +1067,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0045" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664aaa000bbb111ccc222ddd\",\"name\":\"Ravi Kumar\",\"email\":\"ravi@ravirealty.com\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"partnerSubType\":\"AGENT\",\"kycDocumentUrls\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/kyc/rera.pdf\"],\"createdAt\":\"2026-04-15T08:00:00.000Z\"}],\"pagination\":{\"total\":2,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"kycDocumentUrls\":[\"https://example.com/kyc/pan.pdf\",\"https://example.com/kyc/aadhar.pdf\"],\"createdAt\":\"2026-05-01T08:00:00.000Z\"}],\"pagination\":{\"total\":2,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
                 }
               ]
             },
@@ -1056,7 +1159,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0049" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaaa000bbb111ccc222ddd\",\"adminId\":\"664admin000bbb111ccc222\",\"action\":\"LEAD_ASSIGNED\",\"targetType\":\"Lead\",\"targetId\":\"665def456abc789012345678\",\"before\":\"{\\\"status\\\":\\\"UNASSIGNED\\\"}\",\"after\":\"{\\\"status\\\":\\\"ASSIGNED\\\",\\\"assignedPartnerId\\\":\\\"664aaa000bbb111ccc222ddd\\\"}\",\"ipAddress\":\"103.58.12.44\",\"createdAt\":\"2026-05-19T11:00:00.000Z\"}],\"pagination\":{\"total\":89,\"page\":1,\"limit\":20,\"totalPages\":5,\"hasNext\":true,\"hasPrev\":false}}}"
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaaa000bbb111ccc222ddd\",\"adminId\":\"6a1a3213aa8de854e8acfad6\",\"action\":\"LEAD_ASSIGNED\",\"targetType\":\"Lead\",\"targetId\":\"665def456abc789012345678\",\"before\":\"{\\\"status\\\":\\\"UNASSIGNED\\\"}\",\"after\":\"{\\\"status\\\":\\\"ASSIGNED\\\",\\\"assignedPartnerId\\\":\\\"6a1a3213aa8de854e8acfad7\\\"}\",\"ipAddress\":\"103.58.12.44\",\"createdAt\":\"2026-05-19T11:00:00.000Z\"}],\"pagination\":{\"total\":89,\"page\":1,\"limit\":20,\"totalPages\":5,\"hasNext\":true,\"hasPrev\":false}}}"
                 }
               ]
             },
@@ -1074,7 +1177,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0050" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":[{\"id\":\"664aaa000bbb111ccc222ddd\",\"name\":\"Ravi Kumar\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"partnerSubType\":\"AGENT\",\"totalLeads\":12,\"closedLeads\":3,\"totalListings\":8,\"activeListings\":6}]}"
+                  "body": "{\"success\":true,\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"totalLeads\":12,\"closedLeads\":3,\"totalListings\":4,\"activeListings\":4}]}"
                 }
               ]
             }
@@ -1170,7 +1273,7 @@
                 "header": [{ "key": "Content-Type", "value": "application/json" }],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"type\": \"BLOG\",\n  \"title\": \"Top 5 Localities in Bangalore for Investment in 2026\",\n  \"slug\": \"top-5-localities-bangalore-investment-2026\",\n  \"content\": \"<p>Bangalore's real estate market continues to evolve rapidly...</p>\",\n  \"excerpt\": \"A comprehensive guide to the best investment localities in Bangalore.\",\n  \"author\": \"RealtyDoor Research Team\",\n  \"tags\": [\"Bangalore\", \"Investment\", \"2026\"],\n  \"isPublished\": true,\n  \"seoTitle\": \"Top 5 Bangalore Investment Localities 2026 | RealtyDoor\",\n  \"seoDesc\": \"Discover the best localities to invest in Bangalore real estate in 2026.\"\n}",
+                  "raw": "{\n  \"type\": \"BLOG\",\n  \"title\": \"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\n  \"slug\": \"top-5-pune-neighbourhoods-2024\",\n  \"content\": \"<h2>1. Baner</h2><p>Baner has emerged as one of Pune's most sought-after residential hubs...</p>\",\n  \"excerpt\": \"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\n  \"author\": \"RealtyDoor Research\",\n  \"tags\": [\"Pune\", \"Investment\", \"Residential\", \"2024\", \"Neighbourhood Guide\"],\n  \"isPublished\": true,\n  \"seoTitle\": \"Top 5 Pune Neighbourhoods to Buy Property in 2024 | RealtyDoor\",\n  \"seoDesc\": \"Discover the best areas to invest in Pune real estate — Baner, Kothrud, Aundh, Hinjewadi & Wakad compared.\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": { "raw": "{{baseUrl}}/api/admin/content", "host": ["{{baseUrl}}"], "path": ["api","admin","content"] }
@@ -1182,7 +1285,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0054" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"message\":\"Content created\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Localities in Bangalore for Investment in 2026\",\"slug\":\"top-5-localities-bangalore-investment-2026\",\"isPublished\":true,\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+                  "body": "{\"success\":true,\"message\":\"Content created\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"isPublished\":true,\"createdAt\":\"2026-05-30T08:00:00.000Z\"}}"
                 }
               ]
             },
@@ -1193,7 +1296,7 @@
                 "header": [{ "key": "Content-Type", "value": "application/json" }],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"title\": \"Top 5 Localities in Bangalore for Investment in 2026 (Updated)\",\n  \"isPublished\": false\n}",
+                  "raw": "{\n  \"title\": \"Top 5 Neighbourhoods to Buy Property in Pune (2024) — Updated\",\n  \"isPublished\": false\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "url": { "raw": "{{baseUrl}}/api/admin/content/{{contentId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","content","{{contentId}}"] }
@@ -1205,7 +1308,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0055" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"message\":\"Content updated\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"title\":\"Top 5 Localities in Bangalore for Investment in 2026 (Updated)\",\"isPublished\":false,\"updatedAt\":\"2026-05-19T12:00:00.000Z\"}}"
+                  "body": "{\"success\":true,\"message\":\"Content updated\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024) — Updated\",\"isPublished\":false,\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
                 }
               ]
             },
@@ -1256,7 +1359,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0058" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664aaa000bbb111ccc222ddd\",\"name\":\"Ravi Kumar\",\"email\":\"ravi@ravirealty.com\",\"phone\":\"+919876500000\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"kycStatus\":\"VERIFIED\",\"partnerSubType\":\"AGENT\",\"createdAt\":\"2026-04-15T08:00:00.000Z\"},{\"id\":\"666bbb111ccc222ddd333eee\",\"name\":\"Priya Sharma\",\"email\":\"priya@example.com\",\"phone\":\"+919876543210\",\"phoneVerified\":true,\"role\":\"USER\",\"kycStatus\":\"NOT_SUBMITTED\",\"partnerSubType\":null,\"createdAt\":\"2026-05-10T09:00:00.000Z\"}],\"pagination\":{\"total\":240,\"page\":1,\"limit\":20,\"totalPages\":12,\"hasNext\":true,\"hasPrev\":false}}}"
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"kycStatus\":\"VERIFIED\",\"partnerSubType\":\"AGENT\",\"createdAt\":\"2026-05-01T08:00:00.000Z\"},{\"id\":\"6a1a3213aa8de854e8acfad8\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"kycStatus\":\"NOT_SUBMITTED\",\"partnerSubType\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
                 }
               ]
             },
@@ -1283,7 +1386,7 @@
                   "_postman_previewlanguage": "json",
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0059" }],
                   "cookie": [],
-                  "body": "{\"success\":true,\"message\":\"Role updated to PARTNER\",\"data\":{\"id\":\"666bbb111ccc222ddd333eee\",\"name\":\"Priya Sharma\",\"email\":\"priya@example.com\",\"role\":\"PARTNER\"}}"
+                  "body": "{\"success\":true,\"message\":\"Role updated to PARTNER\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"role\":\"PARTNER\"}}"
                 },
                 {
                   "name": "400 – Invalid Role",
@@ -1332,6 +1435,61 @@
               ]
             }
           ]
+        },
+        {
+          "name": "Loan Management",
+          "item": [
+            {
+              "name": "List All Loan Applications",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/loan?page=1&limit=20&status=DOCUMENTS_PENDING",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","loan"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "20" },
+                    { "key": "status", "value": "DOCUMENTS_PENDING" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Loan Applications",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060a" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"user\":{\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\"},\"createdAt\":\"2026-05-27T09:00:00.000Z\"}],\"pagination\":{\"total\":5,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Loan Status",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DOCUMENTS_VERIFIED\",\n  \"adminNote\": \"All documents verified. Sending to HDFC Bank for sanction.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/loan/{{loanId}}/status", "host": ["{{baseUrl}}"], "path": ["api","admin","loan","{{loanId}}","status"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Status Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060b" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Loan status updated\",\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"status\":\"DOCUMENTS_VERIFIED\",\"adminNote\":\"All documents verified. Sending to HDFC Bank for sanction.\",\"updatedAt\":\"2026-05-27T11:00:00.000Z\"}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1357,7 +1515,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Escrow order created\",\"data\":{\"escrow\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"HELD\",\"amount\":100000},\"razorpayOrder\":{\"id\":\"order_Abc123XYZescrow\",\"amount\":10000000,\"currency\":\"INR\"}}}"
+              "body": "{\"success\":true,\"message\":\"Escrow order created\",\"data\":{\"escrow\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"PAYMENT_PENDING\",\"amount\":100000},\"razorpayOrder\":{\"id\":\"order_Abc123XYZescrow\",\"amount\":10000000,\"currency\":\"INR\"}}}"
             },
             {
               "name": "400 – Escrow Already Exists",
@@ -1366,6 +1524,95 @@
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060e" }],
               "cookie": [],
               "body": "{\"success\":false,\"message\":\"Escrow already held for this lead\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Locality Insights",
+      "item": [
+        {
+          "name": "Get Locality Insight",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locality-insights?city=Pune&locality=Baner",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","locality-insights"],
+              "query": [
+                { "key": "city", "value": "Pune" },
+                { "key": "locality", "value": "Baner" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Locality Data",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"citySlug\":\"pune\",\"localitySlug\":\"baner\",\"avgPricePerSqftPaise\":850000,\"minPricePerSqftPaise\":700000,\"maxPricePerSqftPaise\":1050000,\"avgRentPerMonthPaise\":2800000,\"priceChangeLastMonthPct\":2.3,\"nearbyInfra\":[\"D-Mart\",\"Orchid School\",\"Baner Metro Station\",\"Aditya Birla Hospital\"],\"dataAsOfDate\":\"2024-01-01T00:00:00.000Z\",\"createdAt\":\"2026-05-01T06:00:00.000Z\",\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"No locality data found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Upsert Locality Insight (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Pune\",\n  \"locality\": \"Baner\",\n  \"citySlug\": \"pune\",\n  \"localitySlug\": \"baner\",\n  \"avgPricePerSqftPaise\": 850000,\n  \"minPricePerSqftPaise\": 700000,\n  \"maxPricePerSqftPaise\": 1050000,\n  \"avgRentPerMonthPaise\": 2800000,\n  \"priceChangeLastMonthPct\": 2.3,\n  \"nearbyInfra\": [\"D-Mart\", \"Orchid School\", \"Baner Metro Station\", \"Aditya Birla Hospital\"],\n  \"dataAsOfDate\": \"2024-01-01T00:00:00.000Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/locality-insights", "host": ["{{baseUrl}}"], "path": ["api","locality-insights"] }
+          },
+          "response": [
+            {
+              "name": "201 – Locality Insight Saved",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0072" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Locality insight saved\",\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqftPaise\":850000,\"dataAsOfDate\":\"2024-01-01T00:00:00.000Z\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Locality Insight (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/locality-insights/{{localityInsightId}}", "host": ["{{baseUrl}}"], "path": ["api","locality-insights","{{localityInsightId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0073" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Locality insight deleted\",\"data\":null}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0073e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Locality insight not found\"}"
             }
           ]
         }
@@ -1453,7 +1700,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0080" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Localities in Bangalore for Investment in 2026\",\"slug\":\"top-5-localities-bangalore-investment-2026\",\"excerpt\":\"A comprehensive guide to the best investment localities.\",\"author\":\"RealtyDoor Research Team\",\"tags\":[\"Bangalore\",\"Investment\",\"2026\"],\"isPublished\":true,\"publishedAt\":\"2026-05-01T08:00:00.000Z\"}],\"pagination\":{\"total\":12,\"page\":1,\"limit\":10,\"totalPages\":2,\"hasNext\":true,\"hasPrev\":false}}}"
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"excerpt\":\"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\"author\":\"RealtyDoor Research\",\"tags\":[\"Pune\",\"Investment\",\"Residential\",\"2024\",\"Neighbourhood Guide\"],\"isPublished\":true,\"publishedAt\":\"2024-01-10T00:00:00.000Z\"}],\"pagination\":{\"total\":2,\"page\":1,\"limit\":10,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
             }
           ]
         },
@@ -1463,7 +1710,7 @@
             "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/blog/top-5-localities-bangalore-investment-2026", "host": ["{{baseUrl}}"], "path": ["api","blog","top-5-localities-bangalore-investment-2026"] }
+            "url": { "raw": "{{baseUrl}}/api/blog/top-5-pune-neighbourhoods-2024", "host": ["{{baseUrl}}"], "path": ["api","blog","top-5-pune-neighbourhoods-2024"] }
           },
           "response": [
             {
@@ -1472,7 +1719,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0081" }],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Localities in Bangalore for Investment in 2026\",\"slug\":\"top-5-localities-bangalore-investment-2026\",\"content\":\"<p>Bangalore's real estate market continues to evolve rapidly...</p>\",\"excerpt\":\"A comprehensive guide.\",\"author\":\"RealtyDoor Research Team\",\"tags\":[\"Bangalore\",\"Investment\",\"2026\"],\"isPublished\":true,\"publishedAt\":\"2026-05-01T08:00:00.000Z\",\"seoTitle\":\"Top 5 Bangalore Investment Localities 2026 | RealtyDoor\",\"seoDesc\":\"Discover the best localities.\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"content\":\"<h2>1. Baner</h2><p>Baner has emerged as one of Pune's most sought-after residential hubs...</p>\",\"excerpt\":\"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\"author\":\"RealtyDoor Research\",\"tags\":[\"Pune\",\"Investment\",\"Residential\",\"2024\",\"Neighbourhood Guide\"],\"isPublished\":true,\"publishedAt\":\"2024-01-10T00:00:00.000Z\",\"seoTitle\":\"Top 5 Pune Neighbourhoods to Buy Property in 2024 | RealtyDoor\",\"seoDesc\":\"Discover the best areas to invest in Pune real estate — Baner, Kothrud, Aundh, Hinjewadi & Wakad compared.\"}}"
             },
             {
               "name": "404 – Not Found",
@@ -1601,7 +1848,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0200" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"666bbb111ccc222ddd333eee\",\"clerkId\":\"user_2abc123def456\",\"name\":\"Priya Sharma\",\"email\":\"priya@example.com\",\"phone\":\"+919876543210\",\"phoneVerified\":false,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":\"https://img.clerk.com/avatar.jpg\",\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-19T10:00:00.000Z\",\"updatedAt\":\"2026-05-19T10:00:00.000Z\"}}"
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"clerkId\":\"user_seed_user_001\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\"}}"
             },
             {
               "name": "200 – Partner Synced",
@@ -1609,7 +1856,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0200p" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"664aaa000bbb111ccc222ddd\",\"clerkId\":\"user_2partnerXYZ\",\"name\":\"Ravi Kumar\",\"email\":\"ravi@ravirealty.com\",\"phone\":\"+919876500000\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"isNRI\":false,\"profileImageUrl\":\"https://img.clerk.com/partner.jpg\",\"partnerSubType\":\"AGENT\",\"companyName\":\"Ravi Properties Pvt Ltd\",\"bio\":\"8 years in Whitefield\",\"websiteUrl\":\"https://ravirealty.com\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-04-20T10:00:00.000Z\",\"kycRejectionNote\":null,\"createdAt\":\"2026-04-15T08:00:00.000Z\",\"updatedAt\":\"2026-05-19T10:00:00.000Z\"}}"
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"clerkId\":\"user_seed_partner_001\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":\"AGENT\",\"companyName\":\"RealtyPro Solutions\",\"bio\":\"10 years of experience in Pune real estate market.\",\"websiteUrl\":\"https://realtypro.in\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-05-01T08:00:00.000Z\",\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\"}}"
             },
             {
               "name": "401 – Invalid Token",
@@ -1668,7 +1915,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0201" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"666bbb111ccc222ddd333eee\",\"clerkId\":\"user_2abc123def456\",\"name\":\"Priya Sharma\",\"email\":\"priya@example.com\",\"phone\":\"+919876543210\",\"phoneVerified\":true,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":\"https://img.clerk.com/avatar.jpg\",\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-19T10:00:00.000Z\",\"updatedAt\":\"2026-05-19T10:00:00.000Z\",\"unreadNotifications\":3,\"activeSubscription\":null}}"
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"clerkId\":\"user_seed_user_001\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\",\"unreadNotifications\":0,\"activeSubscription\":null}}"
             },
             {
               "name": "200 – Admin Profile",
@@ -1676,7 +1923,7 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0201a" }],
               "cookie": [],
-              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"664admin000bbb111ccc222\",\"clerkId\":\"user_2adminXYZ\",\"name\":\"Platform Admin\",\"email\":\"admin@realtydoor.com\",\"phone\":\"+910000000000\",\"phoneVerified\":true,\"role\":\"ADMIN\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"updatedAt\":\"2026-05-19T10:00:00.000Z\",\"unreadNotifications\":12,\"activeSubscription\":null}}"
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad6\",\"clerkId\":\"user_seed_admin_001\",\"name\":\"Admin User\",\"email\":\"admin@realtydoor.com\",\"phone\":\"+919000000001\",\"phoneVerified\":true,\"role\":\"ADMIN\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\",\"unreadNotifications\":0,\"activeSubscription\":null}}"
             },
             {
               "name": "401 – No Token",
@@ -1704,7 +1951,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_Abc123XYZ\",\n        \"order_id\": \"order_Abc123XYZescrow\",\n        \"amount\": 10000000,\n        \"currency\": \"INR\",\n        \"status\": \"captured\",\n        \"method\": \"upi\",\n        \"email\": \"priya@example.com\",\n        \"contact\": \"+919876543210\",\n        \"created_at\": 1747648200\n      }\n    }\n  }\n}",
+              "raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_Abc123XYZ\",\n        \"order_id\": \"order_Abc123XYZescrow\",\n        \"amount\": 10000000,\n        \"currency\": \"INR\",\n        \"status\": \"captured\",\n        \"method\": \"upi\",\n        \"email\": \"user@realtydoor.com\",\n        \"contact\": \"+919000000003\",\n        \"created_at\": 1747648200\n      }\n    }\n  }\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/webhooks/razorpay", "host": ["{{baseUrl}}"], "path": ["api","webhooks","razorpay"] }
@@ -1741,7 +1988,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_2abc123def456\",\n    \"first_name\": \"Priya\",\n    \"last_name\": \"Sharma\",\n    \"email_addresses\": [\n      {\n        \"email_address\": \"priya@example.com\",\n        \"id\": \"idn_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"phone_numbers\": [\n      {\n        \"phone_number\": \"+919876543210\",\n        \"id\": \"iph_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"image_url\": \"https://img.clerk.com/avatar.jpg\",\n    \"created_at\": 1716105600000\n  }\n}",
+              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_seed_user_001\",\n    \"first_name\": \"Suresh\",\n    \"last_name\": \"Mehta\",\n    \"email_addresses\": [\n      {\n        \"email_address\": \"user@realtydoor.com\",\n        \"id\": \"idn_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"phone_numbers\": [\n      {\n        \"phone_number\": \"+919876543210\",\n        \"id\": \"iph_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"image_url\": \"https://img.clerk.com/avatar.jpg\",\n    \"created_at\": 1716105600000\n  }\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/webhooks/clerk", "host": ["{{baseUrl}}"], "path": ["api","webhooks","clerk"] }

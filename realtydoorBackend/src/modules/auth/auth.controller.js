@@ -33,13 +33,24 @@ async function syncUser(req, res, next) {
     const existing = await prisma.user.findUnique({ where: { clerkId } });
     const resolvedRole = clerkRole || existing?.role || 'USER';
 
+    // Conflict #3: phone is @unique — if another account already holds this number
+    // (e.g. merged Clerk accounts) skip the phone update rather than crashing.
+    let phoneToWrite = phone || undefined;
+    if (phoneToWrite && existing?.phone !== phoneToWrite) {
+      const phoneTaken = await prisma.user.findFirst({
+        where: { phone: phoneToWrite, NOT: { clerkId } },
+        select: { id: true },
+      });
+      if (phoneTaken) phoneToWrite = undefined;
+    }
+
     const user = existing
       ? await prisma.user.update({
           where: { clerkId },
           data: {
             name,
             email,
-            ...(phone && { phone }),
+            ...(phoneToWrite !== undefined && { phone: phoneToWrite }),
             profileImageUrl,
             role: resolvedRole,
           },
@@ -49,7 +60,7 @@ async function syncUser(req, res, next) {
             clerkId,
             name,
             email,
-            ...(phone ? { phone } : {}),
+            ...(phoneToWrite ? { phone: phoneToWrite } : {}),
             profileImageUrl,
             role: resolvedRole,
           },

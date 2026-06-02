@@ -58,6 +58,16 @@ async function razorpay(req, res) {
 
     if (event === 'payment.failed') {
       const { order_id: orderId } = payload.payment.entity;
+
+      const escrow = await prisma.escrowTransaction.findUnique({ where: { razorpayOrderId: orderId } });
+      if (escrow) {
+        await prisma.escrowTransaction.update({
+          where: { razorpayOrderId: orderId },
+          data: { status: 'FAILED', failedAt: new Date() },
+        });
+        return res.json({ status: 'ok' });
+      }
+
       await prisma.userSubscription.updateMany({
         where: { razorpayOrderId: orderId },
         data: { paymentStatus: 'FAILED' },

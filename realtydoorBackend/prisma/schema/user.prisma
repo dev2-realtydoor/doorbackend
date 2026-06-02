@@ -7,7 +7,8 @@ model User {
   clerkId       String          @unique
   name          String
   email         String          @unique
-  phone               String?
+  phone               String?   @unique
+  phoneVerifiedAt     DateTime?
   phoneVerified       Boolean   @default(false)
   phoneOtp            String?
   phoneOtpExpiresAt   DateTime?
@@ -22,6 +23,11 @@ model User {
   bio             String?
   profileImageUrl String?
   websiteUrl      String?
+
+  // Premium B2B partner (Phase 2 — §3.2)
+  isPremiumPartner   Boolean   @default(false)
+  premiumValidUntil  DateTime?
+  premiumOrderId     String?
 
   // KYC (Partners only)
   kycStatus        KycStatus @default(NOT_SUBMITTED)
@@ -44,4 +50,5 @@ model User {
   b2bCollabs        B2BConnection[]   @relation("BuyerPartner")
   videoTourRequests VideoTourRequest[]
   contactMessages   ContactMessage[]
+  loanApplications  LoanApplication[]
 }

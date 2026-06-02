@@ -12,6 +12,7 @@ const cmsRoutes = require('../modules/cms/cms.routes');
 const notificationsRoutes = require('../modules/notifications/notifications.routes');
 const contactRoutes = require('../modules/contact/contact.routes');
 const webhookRoutes = require('../modules/webhooks/webhooks.routes');
+const localityRoutes = require('../modules/locality/locality.routes');
 
 // Auth (sync on login, profile)
 router.use('/auth', authRoutes);
@@ -22,6 +23,7 @@ router.use('/services', servicesRoutes);
 router.use('/blog', cmsRoutes);           // GET /api/blog and /api/blog/:slug
 router.use('/contact', contactRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/locality-insights', localityRoutes);
 
 // Authenticated
 router.use('/leads', leadsRoutes);

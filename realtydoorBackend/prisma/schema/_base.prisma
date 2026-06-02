@@ -78,7 +78,61 @@ enum TicketStatus {
 }
 
 enum EscrowStatus {
+  PAYMENT_PENDING
   HELD
   RELEASED
   REFUNDED
+  FAILED
+  CANCELLED
+}
+
+enum BuyerFeedbackStatus {
+  INTERESTED
+  NOT_INTERESTED
+  STILL_DECIDING
+  NO_RESPONSE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum B2BConnectionStatus {
+  INTERESTED
+  CONNECTED
+  CLOSED
+}
+
+enum VideoTourStatus {
+  PENDING
+  ASSIGNED
+  COMPLETED
+}
+
+enum DocumentStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum CommissionStatus {
+  PENDING
+  INVOICED
+  COLLECTED
+  DISPUTED
+}
+
+enum LoanStatus {
+  DOCUMENTS_PENDING
+  DOCUMENTS_SUBMITTED
+  DOCUMENTS_VERIFIED
+  SENT_TO_BANK
+  AWAITING_SANCTION
+  SANCTIONED
+  DISBURSED
+  REJECTED
 }

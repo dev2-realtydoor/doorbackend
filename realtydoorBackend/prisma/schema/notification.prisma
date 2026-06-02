@@ -10,10 +10,15 @@ model Notification {
   title     String
   message   String
   type      String
-  isRead    Boolean  @default(false)
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
   linkUrl   String?
-  createdAt DateTime @default(now())
+  channel   String?
+  metadata  String?
+  createdAt DateTime  @default(now())
 
   @@index([userId, isRead])
   @@index([userId])
+  @@index([type])
+  @@index([createdAt])
 }

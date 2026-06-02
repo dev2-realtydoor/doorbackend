@@ -12,10 +12,11 @@ router.use(authenticate, requireAdmin);
 router.get('/leads', ctrl.getLeads);
 router.patch('/leads/:id/assign', ctrl.assignLead);
 
-// Property approval
+// Property approval + admin edit
 router.get('/properties', ctrl.getPendingProperties);
 router.patch('/properties/:id/approve', ctrl.approveProperty);
 router.patch('/properties/:id/reject', ctrl.rejectProperty);
+router.patch('/properties/:id', ctrl.editProperty);
 
 // KYC
 router.get('/kyc', ctrl.getPendingKyc);
@@ -42,6 +43,10 @@ router.delete('/content/:id', cmsCtrl.remove);
 
 // Notifications
 router.post('/notifications/broadcast', notifCtrl.broadcast);
+
+// Loan management
+router.get('/loan',               ctrl.getLoans);
+router.patch('/loan/:id/status',  ctrl.updateLoanStatus);
 
 // User management & role assignment
 router.get('/users',              ctrl.getUsers);

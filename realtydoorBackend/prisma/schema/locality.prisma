@@ -1,0 +1,29 @@
+// ─── LOCALITY INSIGHT ─────────────────────────────────────────────────────────
+// Powers /properties/[slug] "Locality Insights" panel.
+// Admin-managed (monthly refresh) via /admin/cms/locality-insights.
+
+model LocalityInsight {
+  id                       String   @id @default(auto()) @map("_id") @db.ObjectId
+  city                     String
+  locality                 String
+  citySlug                 String?
+  localitySlug             String?
+
+  // Money in paise (new fields use Int paise per Conflict #1)
+  avgPricePerSqftPaise     Int
+  minPricePerSqftPaise     Int?
+  maxPricePerSqftPaise     Int?
+  avgRentPerMonthPaise     Int?
+
+  priceChangeLastMonthPct  Float?
+
+  nearbyInfra              String[]
+  dataAsOfDate             DateTime
+  updatedByAdminId         String?  @db.ObjectId
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@unique([city, locality])
+  @@index([city])
+  @@index([citySlug, localitySlug])
+}

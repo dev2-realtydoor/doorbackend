@@ -11,9 +11,15 @@ model UserDocument {
   documentType String
   fileUrl      String
   fileName     String
-  isVerified   Boolean   @default(false)
-  verifiedAt   DateTime?
-  uploadedAt   DateTime  @default(now())
+  status            DocumentStatus @default(PENDING_REVIEW)
+  isVerified        Boolean        @default(false)
+  verifiedAt        DateTime?
+  verifiedByAdminId String?        @db.ObjectId
+  rejectionNote     String?
+  expiresAt         DateTime?
+  uploadedAt        DateTime       @default(now())
 
   @@index([userId])
+  @@index([userId, status])
+  @@index([documentType])
 }

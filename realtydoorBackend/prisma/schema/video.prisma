@@ -2,14 +2,22 @@
 // NRI buyers request virtual tours. Admin assigns a staff member to conduct them.
 
 model VideoTourRequest {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String    @db.ObjectId
-  user        User      @relation(fields: [userId], references: [id])
-  propertyId  String    @db.ObjectId
-  // status: PENDING | ASSIGNED | COMPLETED
-  status      String    @default("PENDING")
-  assignedTo  String?   @db.ObjectId
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String          @db.ObjectId
+  user        User            @relation(fields: [userId], references: [id])
+  propertyId  String          @db.ObjectId
+  property    Property        @relation(fields: [propertyId], references: [id])
+  status      VideoTourStatus @default(PENDING)
+  assignedTo  String?         @db.ObjectId
   videoUrl    String?
   scheduledAt DateTime?
-  createdAt   DateTime  @default(now())
+  userNote    String?
+  adminNote   String?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
+  @@index([assignedTo])
 }

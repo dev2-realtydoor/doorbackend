@@ -13,8 +13,13 @@ model AuditLog {
   before     String?
   after      String?
   ipAddress  String?
+  actorRole  String?
+  requestId  String?
+  metadata   String?
   createdAt  DateTime @default(now())
 
   @@index([adminId])
   @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
 }

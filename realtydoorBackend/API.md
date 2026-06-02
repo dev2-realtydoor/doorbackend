@@ -1,74 +1,22 @@
-# RealtyDoor API Reference
-
-**Base URL:** `https://api.realtydoor.com/api`  
-**Version:** 1.0 (MVP)
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Authentication](#authentication)
-3. [Response Format](#response-format)
-4. [Error Codes](#error-codes)
-5. [Rate Limits](#rate-limits)
-6. [Auth (Login Sync)](#auth-login-sync)
-    - POST /api/auth/sync
-    - GET /api/auth/me
-    - POST /api/auth/set-role
-7. [Properties](#properties)
-    - POST /api/properties/:id/images
-8. [Leads](#leads)
-9. [Users (Dashboard)](#users-dashboard)
-    - POST /api/user/verify-phone/otp
-10. [Partners](#partners)
-    - GET /api/partner/listings/:id
-11. [Admin](#admin)
-    - [User Management](#get-apiadminusers)
-12. [Escrow](#escrow)
-13. [Services](#services)
-14. [CMS / Blog](#cms--blog)
-15. [Notifications](#notifications)
-16. [Contact](#contact)
-17. [Webhooks](#webhooks)
+# RealtyDoor Backend — API Reference
 
 ---
 
 ## Overview
 
-### Role Hierarchy
+**Base URL:** `http://localhost:5000/api` (dev) · `https://api.realtydoor.in/api` (prod)
 
-| Role | Description |
-|---|---|
-| `USER` | Buyers, tenants, NRI investors |
-| `PARTNER` | Agents, builders, advisors (requires KYC) |
-| `ADMIN` | Platform owner — full access |
+### Authentication
 
-### Auth Levels Used in This Doc
-
-- **Public** — No token required
-- **Auth** — Any authenticated user (USER / PARTNER / ADMIN)
-- **User** — `role: USER` or above
-- **Partner** — `role: PARTNER` or above + `kycStatus: VERIFIED`
-- **Admin** — `role: ADMIN` only
-
----
-
-## Authentication
-
-All protected routes require a **Clerk JWT** in the Authorization header.
+All protected routes require a Clerk JWT in the `Authorization` header:
 
 ```
 Authorization: Bearer <clerk_session_token>
 ```
 
-Tokens are obtained from the Clerk frontend SDK (`useAuth().getToken()`).
+Roles: `USER` · `PARTNER` · `ADMIN`
 
----
-
-## Response Format
-
-### Success
+### Response Envelope
 
 ```json
 {
@@ -78,19 +26,230 @@ Tokens are obtained from the Clerk frontend SDK (`useAuth().getToken()`).
 }
 ```
 
-### Paginated Success
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Error description"
+}
+```
+
+### Paginated Responses
+
+Paginated endpoints return this shape inside `data`:
+
+```json
+{
+  "data": [ ... ],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 5,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+```
+
+Default: `page=1`, `limit=20`.
+
+### HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | OK |
+| 201 | Created |
+| 204 | No Content (DELETE) |
+| 400 | Bad Request / Validation error |
+| 401 | Unauthenticated |
+| 403 | Forbidden (wrong role / KYC not verified) |
+| 404 | Not found |
+| 409 | Conflict (duplicate) |
+| 429 | Rate limited / OTP locked |
+| 500 | Server error |
+
+---
+
+## 1. Auth
+
+### POST /api/auth/sync
+
+Verifies Clerk JWT, upserts DB user record, returns profile.
+
+**Auth:** Clerk JWT in `Authorization` header (token verified manually, no middleware)
+
+**Request Body:** _(none)_
+
+**Response `200`:**
 
 ```json
 {
   "success": true,
   "message": "Success",
   "data": {
-    "data": [ ... ],
+    "id": "64abc...",
+    "clerkId": "user_2abc...",
+    "name": "Rajdeep Kumar",
+    "email": "rajdeep@example.com",
+    "phone": "+919876543210",
+    "phoneVerified": true,
+    "phoneVerifiedAt": "2024-01-15T10:30:00.000Z",
+    "role": "USER",
+    "isNRI": false,
+    "profileImageUrl": "https://img.clerk.com/...",
+    "partnerSubType": null,
+    "companyName": null,
+    "bio": null,
+    "websiteUrl": null,
+    "kycStatus": "NOT_SUBMITTED",
+    "kycVerifiedAt": null,
+    "kycRejectionNote": null,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+### GET /api/auth/me
+
+Returns the full profile for the authenticated user including active subscription and unread notification count.
+
+**Auth:** Required (any role)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64abc...",
+    "clerkId": "user_2abc...",
+    "name": "Rajdeep Kumar",
+    "email": "rajdeep@example.com",
+    "phone": "+919876543210",
+    "phoneVerified": true,
+    "phoneVerifiedAt": "2024-01-15T10:30:00.000Z",
+    "role": "PARTNER",
+    "isNRI": false,
+    "profileImageUrl": "https://img.clerk.com/...",
+    "partnerSubType": "AGENT",
+    "companyName": "RealtyPro Solutions",
+    "bio": "10 years in Pune real estate.",
+    "websiteUrl": "https://realtypro.in",
+    "kycStatus": "VERIFIED",
+    "kycVerifiedAt": "2024-02-01T00:00:00.000Z",
+    "kycRejectionNote": null,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-02-01T00:00:00.000Z",
+    "unreadNotifications": 3,
+    "activeSubscription": {
+      "plan": "Maintenance Premium",
+      "paymentStatus": "SUCCESS",
+      "expiresAt": "2025-02-01T00:00:00.000Z"
+    }
+  }
+}
+```
+
+`activeSubscription` is `null` if the user has no subscription.
+
+---
+
+### POST /api/auth/set-role
+
+Self-service role upgrade: `USER` → `PARTNER` only. Idempotent if already PARTNER.
+
+**Auth:** Required (USER)
+
+**Request Body:**
+
+```json
+{ "role": "PARTNER" }
+```
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": { "role": "PARTNER" }
+}
+```
+
+**Errors:** `400` if role is not `"PARTNER"`.
+
+---
+
+## 2. Properties
+
+### GET /api/properties
+
+Search published, non-B2B properties.
+
+**Auth:** Public
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `q` | string | Full-text search (title, description, locality) |
+| `city` | string | Case-insensitive exact match |
+| `locality` | string | Case-insensitive contains |
+| `propertyType` | string | `FLAT` · `INDEPENDENT_HOUSE` · `VILLA` · `PLOT` · `COMMERCIAL_OFFICE` · `RETAIL_SHOP` |
+| `listingType` | string | `SALE` · `RENT` · `LEASE` |
+| `propertyStatus` | string | `READY_TO_MOVE` · `UNDER_CONSTRUCTION` |
+| `bhk` | number | Number of bedrooms |
+| `minPrice` | number | Min price (₹) |
+| `maxPrice` | number | Max price (₹) |
+| `minArea` | number | Min carpet area (sq ft) |
+| `maxArea` | number | Max carpet area (sq ft) |
+| `furnishing` | string | Free text e.g. `Furnished` |
+| `isVerified` | boolean | Filter verified listings |
+| `amenities` | string | Comma-separated e.g. `Gym,Pool` |
+| `sort` | string | `price_asc` · `price_desc` · `newest` · `area_asc` (default: `newest`) |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64abc...",
+        "title": "3 BHK Flat in Baner",
+        "slug": "3-bhk-flat-in-baner-1700000000000",
+        "price": 8500000,
+        "monthlyRent": null,
+        "propertyType": "FLAT",
+        "listingType": "SALE",
+        "propertyStatus": "READY_TO_MOVE",
+        "bhk": 3,
+        "carpetArea": 1200,
+        "locality": "Baner",
+        "city": "Pune",
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"],
+        "coverImageIndex": 0,
+        "isVerified": true,
+        "isFeatured": false,
+        "reraNumber": "P52100012345",
+        "createdAt": "2024-01-10T00:00:00.000Z"
+      }
+    ],
     "pagination": {
-      "total": 120,
+      "total": 45,
       "page": 1,
       "limit": 20,
-      "totalPages": 6,
+      "totalPages": 3,
       "hasNext": true,
       "hasPrev": false
     }
@@ -98,421 +257,153 @@ Tokens are obtained from the Clerk frontend SDK (`useAuth().getToken()`).
 }
 ```
 
-### Error
-
-```json
-{
-  "success": false,
-  "message": "Human-readable error message",
-  "data": { "code": "PHONE_NOT_VERIFIED" }
-}
-```
-
 ---
 
-## Error Codes
+### GET /api/properties/featured
 
-| HTTP Status | Meaning |
-|---|---|
-| `400` | Bad request / validation error |
-| `401` | Missing or invalid token |
-| `403` | Insufficient permissions / KYC not verified / phone not verified |
-| `404` | Resource not found |
-| `409` | Conflict (duplicate entry) |
-| `429` | Rate limit exceeded |
-| `500` | Internal server error |
-
-### Special `data.code` Values
-
-| Code | Trigger |
-|---|---|
-| `PHONE_NOT_VERIFIED` | Action requires phone verification |
-
----
-
-## Rate Limits
-
-| Limiter | Window | Max Requests | Applied To |
-|---|---|---|---|
-| Default | 15 min | 100 | All routes |
-| OTP | 1 hour | 5 | `/leads/*/verify-otp`, `/user/verify-phone` |
-| Auth | 15 min | 20 | Auth-related routes |
-| Upload | 1 hour | 50 | File upload routes |
-
----
-
-## Auth (Login Sync)
-
-These two endpoints are called by the Next.js frontend on every login and page load. They handle the gap between Clerk (identity) and MongoDB (platform data).
-
-### POST `/api/auth/sync`
-
-Call this **immediately after every Clerk login**. Fetches the full Clerk profile, upserts the MongoDB user record with the latest data, and returns the complete profile.
-
-**Auth:** Clerk JWT in `Authorization: Bearer` header (no `authenticate` middleware — verifies the token internally)
-
-**Request:** No body required. JWT is read from the `Authorization` header.
-
-**What it syncs from Clerk:**
-
-| Field | Source |
-|---|---|
-| `name` | `firstName + lastName` |
-| `email` | Primary email address |
-| `phone` | Primary phone number (if added in Clerk) |
-| `profileImageUrl` | `imageUrl` |
-| `role` | `publicMetadata.role` (set by admin or on first signup) |
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "666bbb111ccc222ddd333eee",
-    "clerkId": "user_2abc123def456",
-    "name": "Priya Sharma",
-    "email": "priya@example.com",
-    "phone": "+919876543210",
-    "phoneVerified": false,
-    "role": "USER",
-    "isNRI": false,
-    "profileImageUrl": "https://img.clerk.com/avatar.jpg",
-    "partnerSubType": null,
-    "companyName": null,
-    "bio": null,
-    "websiteUrl": null,
-    "kycStatus": "NOT_SUBMITTED",
-    "kycVerifiedAt": null,
-    "kycRejectionNote": null,
-    "createdAt": "2026-05-19T10:00:00.000Z",
-    "updatedAt": "2026-05-19T10:00:00.000Z"
-  }
-}
-```
-
-**Side Effects:**
-- Upserts the `User` record in MongoDB with latest Clerk data
-- If `publicMetadata.role` is missing in Clerk, stamps it with the resolved role (default: `USER`)
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `401` | Invalid or expired token |
-
----
-
-### GET `/api/auth/me`
-
-Returns the full platform profile for the currently authenticated user. Includes unread notification count and active subscription summary. Works for all roles.
-
-**Auth:** Auth (any role)
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "666bbb111ccc222ddd333eee",
-    "clerkId": "user_2abc123def456",
-    "name": "Priya Sharma",
-    "email": "priya@example.com",
-    "phone": "+919876543210",
-    "phoneVerified": true,
-    "role": "USER",
-    "isNRI": false,
-    "profileImageUrl": "https://img.clerk.com/avatar.jpg",
-    "partnerSubType": null,
-    "companyName": null,
-    "bio": null,
-    "websiteUrl": null,
-    "kycStatus": "NOT_SUBMITTED",
-    "kycVerifiedAt": null,
-    "kycRejectionNote": null,
-    "createdAt": "2026-05-19T10:00:00.000Z",
-    "updatedAt": "2026-05-19T10:00:00.000Z",
-    "unreadNotifications": 3,
-    "activeSubscription": null
-  }
-}
-```
-
-For a **PARTNER** user, role-specific fields are also populated:
-
-```json
-{
-  "role": "PARTNER",
-  "partnerSubType": "AGENT",
-  "companyName": "Ravi Properties Pvt Ltd",
-  "bio": "8 years in Whitefield and Sarjapur.",
-  "websiteUrl": "https://ravirealty.com",
-  "kycStatus": "VERIFIED",
-  "kycVerifiedAt": "2026-04-20T10:00:00.000Z",
-  "activeSubscription": {
-    "plan": "PRO",
-    "paymentStatus": "SUCCESS",
-    "expiresAt": "2027-04-20T00:00:00.000Z"
-  }
-}
-```
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `401` | No token provided |
-| `404` | User not found |
-
----
-
-### POST `/api/auth/set-role`
-
-Self-service role upgrade — allows a newly signed-up user to promote themselves from `USER` to `PARTNER`. Called by the auth callback page when the user signed up with partner intent.
-
-**Auth:** Auth (any role)
-
-**Request Body:**
-
-```json
-{
-  "role": "PARTNER"
-}
-```
-
-> Only `"PARTNER"` is accepted. Requesting `"ADMIN"` returns `400`. The operation is idempotent — if the user is already `PARTNER` or `ADMIN`, the current role is returned unchanged.
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": { "role": "PARTNER" }
-}
-```
-
-**Side Effects:**
-- Updates `User.role` in MongoDB
-- Stamps `publicMetadata.role = 'PARTNER'` in Clerk via the Clerk Management API (best-effort; DB update succeeds even if Clerk API call fails)
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Only PARTNER role can be self-assigned |
-| `401` | Not authenticated |
-
----
-
-### Frontend Usage (Next.js)
-
-```js
-// 1. After every Clerk login — call sync to upsert DB profile
-const { getToken } = useAuth();
-
-useEffect(() => {
-  async function onLogin() {
-    const token = await getToken();  // or getToken({ template: 'realtydoor' })
-    await fetch('/api/auth/sync', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  }
-}, []);
-
-// 2. On any page — get full profile (role, kycStatus, etc.)
-const { data } = await fetch('/api/auth/me', {
-  headers: { Authorization: `Bearer ${await getToken()}` },
-});
-// data.role === 'USER' | 'PARTNER' | 'ADMIN'
-```
-
----
-
-## Properties
-
-### GET `/api/properties`
-
-Search and filter properties.
+Returns up to 12 featured approved listings.
 
 **Auth:** Public
 
-**Query Parameters:**
-
-| Param | Type | Description |
-|---|---|---|
-| `q` | string | Full-text search on title, description, locality |
-| `city` | string | Exact match, case-insensitive (e.g. `Bangalore`) |
-| `locality` | string | Partial match (e.g. `Whitefield`) |
-| `propertyType` | string | `FLAT` \| `INDEPENDENT_HOUSE` \| `VILLA` \| `PLOT` \| `COMMERCIAL_OFFICE` \| `RETAIL_SHOP` |
-| `listingType` | string | `SALE` \| `RENT` \| `LEASE` |
-| `bhk` | number | Exact BHK count |
-| `minPrice` | number | Min price in rupees (absolute) |
-| `maxPrice` | number | Max price in rupees |
-| `minArea` | number | Min carpet area in sq.ft |
-| `maxArea` | number | Max carpet area in sq.ft |
-| `furnishing` | string | `FULLY_FURNISHED` \| `SEMI_FURNISHED` \| `UNFURNISHED` |
-| `propertyStatus` | string | `READY_TO_MOVE` \| `UNDER_CONSTRUCTION` |
-| `isVerified` | boolean | Only RealtyDoor Verified listings |
-| `amenities` | string | Comma-separated list — AND logic (e.g. `Power Backup,Gym`) |
-| `sort` | string | `price_asc` \| `price_desc` \| `newest` \| `area_asc` |
-| `page` | number | Default: 1 |
-| `limit` | number | Default: 20, Max: 50 |
-
-> Only `publishStatus: APPROVED` and `isB2BOnly: false` listings are returned — always enforced.
-
 **Response `200`:**
 
 ```json
 {
   "success": true,
-  "data": {
-    "data": [
-      {
-        "id": "664abc123def456789012345",
-        "title": "Spacious 2BHK in Whitefield",
-        "slug": "spacious-2bhk-whitefield-1717000000000",
-        "price": 5500000,
-        "monthlyRent": null,
-        "propertyType": "FLAT",
-        "listingType": "SALE",
-        "propertyStatus": "READY_TO_MOVE",
-        "bhk": 2,
-        "carpetArea": 950,
-        "locality": "Whitefield",
-        "city": "Bangalore",
-        "images": ["https://res.cloudinary.com/..."],
-        "coverImageIndex": 0,
-        "isVerified": true,
-        "isFeatured": false,
-        "reraNumber": "PRM/KA/RERA/1251/446/PR/171015/000015",
-        "createdAt": "2026-05-01T10:00:00.000Z"
-      }
-    ],
-    "pagination": { "total": 45, "page": 1, "limit": 20, "totalPages": 3, "hasNext": true, "hasPrev": false }
-  }
+  "message": "Success",
+  "data": [
+    {
+      "id": "64abc...",
+      "title": "Luxury Villa in Koregaon Park",
+      "slug": "luxury-villa-koregaon-park-1700000000000",
+      "price": 25000000,
+      "monthlyRent": null,
+      "propertyType": "VILLA",
+      "listingType": "SALE",
+      "bhk": 4,
+      "locality": "Koregaon Park",
+      "city": "Pune",
+      "images": ["https://cdn.realtydoor.in/villa1.jpg"],
+      "coverImageIndex": 0,
+      "isVerified": true
+    }
+  ]
 }
 ```
 
 ---
 
-### GET `/api/properties/featured`
+### GET /api/properties/:slug
 
-Returns up to 12 admin-featured listings.
-
-**Auth:** Public
-
-**Response `200`:** Same shape as search results (no pagination wrapper).
-
----
-
-### GET `/api/properties/:slug`
-
-Full property detail for a single listing.
+Full property detail for a single approved listing.
 
 **Auth:** Public
-
-**Path Params:**
-
-| Param | Description |
-|---|---|
-| `slug` | Unique property slug (e.g. `spacious-2bhk-whitefield-1717000000000`) |
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
-    "id": "664abc123def456789012345",
-    "title": "Spacious 2BHK in Whitefield",
-    "slug": "spacious-2bhk-whitefield-1717000000000",
-    "description": "Well-ventilated 2BHK...",
-    "price": 5500000,
+    "id": "64abc...",
+    "title": "3 BHK Flat in Baner",
+    "slug": "3-bhk-flat-in-baner-1700000000000",
+    "description": "Spacious 3 BHK with great amenities...",
+    "price": 8500000,
+    "monthlyRent": null,
+    "priceNegotiable": true,
     "propertyType": "FLAT",
     "listingType": "SALE",
     "propertyStatus": "READY_TO_MOVE",
     "publishStatus": "APPROVED",
-    "bhk": 2,
-    "bathrooms": 2,
-    "carpetArea": 950,
-    "builtUpArea": 1100,
-    "floorNumber": 4,
-    "totalFloors": 12,
-    "furnishing": "SEMI_FURNISHED",
-    "facing": "East",
-    "address": "Brigade Gateway, Whitefield",
-    "locality": "Whitefield",
-    "city": "Bangalore",
-    "state": "Karnataka",
-    "pincode": "560066",
-    "latitude": 12.9698,
-    "longitude": 77.7499,
-    "nearbyLandmarks": ["ITPL - 1.2km", "Phoenix Mall - 3km"],
+    "isFeatured": false,
     "isVerified": true,
-    "reraNumber": "PRM/KA/RERA/...",
-    "bankApprovals": ["HDFC", "SBI"],
-    "images": ["https://res.cloudinary.com/..."],
-    "amenities": ["Power Backup", "Gym", "Swimming Pool"],
+    "bhk": 3,
+    "bathrooms": 2,
+    "carpetArea": 1200,
+    "builtUpArea": 1400,
+    "plotArea": null,
+    "floorNumber": 4,
+    "totalFloors": 10,
+    "ageOfProperty": 2,
+    "furnishing": "Semi-Furnished",
+    "facing": "East",
+    "possessionDate": null,
+    "address": "Plot 12, Baner Road",
+    "locality": "Baner",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "pincode": "411045",
+    "latitude": 18.5596,
+    "longitude": 73.7769,
+    "nearbyLandmarks": ["D-Mart", "Orchid School"],
+    "reraNumber": "P52100012345",
+    "bankApprovals": ["SBI", "HDFC"],
+    "images": ["https://cdn.realtydoor.in/prop1.jpg"],
+    "coverImageIndex": 0,
+    "floorPlanUrl": null,
+    "virtualTourUrl": null,
+    "videoUrl": null,
+    "amenities": ["Gym", "Swimming Pool", "24x7 Security"],
+    "societyFeatures": ["Club House", "Children's Play Area"],
+    "metaTitle": null,
+    "metaDescription": null,
+    "createdAt": "2024-01-10T00:00:00.000Z",
+    "updatedAt": "2024-01-15T00:00:00.000Z",
     "partner": {
-      "companyName": "Ravi Properties Pvt Ltd",
+      "companyName": "RealtyPro Solutions",
       "partnerSubType": "AGENT"
-    },
-    "createdAt": "2026-05-01T10:00:00.000Z",
-    "updatedAt": "2026-05-10T08:30:00.000Z"
+    }
   }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `404` | Property not found |
+**Errors:** `404` if not found or not approved.
 
 ---
 
-### POST `/api/properties`
+### POST /api/properties
 
-Submit a new property listing for Admin approval.
+Create a new property listing (submitted for admin review).
 
-**Auth:** Partner (KYC Verified)
-
-**Content-Type:** `application/json`
+**Auth:** PARTNER + KYC verified
 
 **Request Body:**
 
 ```json
 {
-  "title": "Spacious 2BHK in Whitefield",
-  "description": "Well-ventilated 2BHK flat with great amenities...",
-  "price": 5500000,
+  "title": "3 BHK Flat in Baner",
+  "description": "Spacious apartment with modern amenities in prime location.",
   "propertyType": "FLAT",
   "listingType": "SALE",
   "propertyStatus": "READY_TO_MOVE",
-  "bhk": 2,
+  "price": 8500000,
+  "priceNegotiable": true,
+  "bhk": 3,
   "bathrooms": 2,
-  "carpetArea": 950,
-  "builtUpArea": 1100,
+  "carpetArea": 1200,
+  "builtUpArea": 1400,
   "floorNumber": 4,
-  "totalFloors": 12,
-  "furnishing": "SEMI_FURNISHED",
+  "totalFloors": 10,
+  "ageOfProperty": 2,
+  "furnishing": "Semi-Furnished",
   "facing": "East",
-  "address": "Brigade Gateway, Whitefield",
-  "locality": "Whitefield",
-  "city": "Bangalore",
-  "state": "Karnataka",
-  "pincode": "560066",
-  "latitude": 12.9698,
-  "longitude": 77.7499,
-  "reraNumber": "PRM/KA/RERA/...",
-  "amenities": ["Power Backup", "Gym"],
-  "bankApprovals": ["HDFC"]
+  "address": "Plot 12, Baner Road",
+  "locality": "Baner",
+  "city": "Pune",
+  "state": "Maharashtra",
+  "pincode": "411045",
+  "latitude": 18.5596,
+  "longitude": 73.7769,
+  "nearbyLandmarks": ["D-Mart", "Orchid School"],
+  "amenities": ["Gym", "Swimming Pool"],
+  "societyFeatures": ["Club House"],
+  "reraNumber": "P52100012345"
 }
 ```
 
-**Required fields:** `title`, `description`, `propertyType`, `listingType`, `address`, `locality`, `city`, `state`, `pincode`
+Fields `publishStatus`, `isVerified`, `partnerId` are silently stripped.
 
 **Response `201`:**
 
@@ -521,109 +412,74 @@ Submit a new property listing for Admin approval.
   "success": true,
   "message": "Listing submitted for review",
   "data": {
-    "id": "664abc123def456789012345",
-    "slug": "spacious-2bhk-whitefield-1717000000000",
-    "publishStatus": "PENDING_APPROVAL"
+    "id": "64abc...",
+    "slug": "3-bhk-flat-in-baner-1700000000000",
+    "publishStatus": "PENDING_APPROVAL",
+    "partnerId": "64partner...",
+    "createdAt": "2024-01-10T00:00:00.000Z"
   }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Validation error |
-| `401` | Not authenticated |
-| `403` | KYC verification required |
-
 ---
 
-### PATCH `/api/properties/:id`
+### PATCH /api/properties/:id
 
-Edit an existing listing (Partner can only edit their own; `publishStatus` cannot be changed).
+Update own listing. Fields `publishStatus`, `isVerified`, `partnerId` are stripped.
 
-**Auth:** Partner (KYC Verified)
+**Auth:** PARTNER + KYC verified
 
-**Request Body:** Any subset of the `POST /api/properties` fields (partial update).
-
-**Response `200`:** Updated property object.
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `403` | Not your listing |
-| `404` | Property not found |
-
----
-
-### POST `/api/properties/:id/images`
-
-Upload additional images for an existing listing. Images are appended to the existing `images` array.
-
-**Auth:** Partner (KYC Verified)
-
-**Content-Type:** `multipart/form-data`
-
-**Rate Limit:** Upload limiter (50/hour)
-
-**Form Fields:**
-
-| Field | Type | Description |
-|---|---|---|
-| `images` | file[] | Up to 10 images (jpg/png/webp, max 10MB each) |
+**Request Body:** Partial property fields (same as POST).
 
 **Response `200`:**
 
 ```json
-{
-  "success": true,
-  "message": "Images uploaded",
-  "data": {
-    "id": "664abc123def456789012345",
-    "images": [
-      "https://res.cloudinary.com/existing-image.jpg",
-      "https://res.cloudinary.com/new-image.jpg"
-    ]
-  }
-}
+{ "success": true, "message": "Listing updated", "data": { ... } }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | No images provided |
-| `403` | Not your listing |
-| `404` | Property not found |
+**Errors:** `403` not your listing · `404` not found.
 
 ---
 
-## Leads
+### POST /api/properties/:id/images
 
-### POST `/api/leads`
+Upload images to a listing.
 
-Submit a buyer inquiry for a property.
+**Auth:** PARTNER (KYC not required)
 
-**Auth:** User (phone verified)
+**Request:** `multipart/form-data`, field name `images`, up to 10 files.
 
-> Phone verification is required. If `phoneVerified: false`, returns `403` with `data.code: "PHONE_NOT_VERIFIED"`.
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Images uploaded", "data": { "images": ["url1", "url2"] } }
+```
+
+**Errors:** `400` no images provided · `403` not your listing.
+
+---
+
+## 3. Leads
+
+### POST /api/leads
+
+Submit a buyer inquiry.
+
+**Auth:** USER + phone verified
 
 **Request Body:**
 
 ```json
 {
-  "propertyId": "664abc123def456789012345",
-  "buyerName": "Priya Sharma",
-  "buyerEmail": "priya@example.com",
+  "propertyId": "64abc...",
+  "buyerName": "Suresh Mehta",
+  "buyerEmail": "suresh@example.com",
   "buyerPhone": "+919876543210",
-  "buyerMessage": "I am interested in this property. Can we schedule a visit?"
+  "buyerMessage": "Interested in a site visit this weekend."
 }
 ```
 
-**Validation:**
-- `buyerPhone`: Must be `+91XXXXXXXXXX` format (Indian mobile)
-- `buyerMessage`: Max 500 characters
+`buyerMessage` is optional.
 
 **Response `201`:**
 
@@ -632,56 +488,47 @@ Submit a buyer inquiry for a property.
   "success": true,
   "message": "We'll reach out within 24 hours",
   "data": {
-    "id": "665def456abc789012345678",
+    "id": "64lead...",
+    "buyerName": "Suresh Mehta",
+    "buyerEmail": "suresh@example.com",
+    "buyerPhone": "+919876543210",
+    "propertyId": "64abc...",
     "status": "UNASSIGNED",
-    "propertyId": "664abc123def456789012345",
-    "buyerName": "Priya Sharma",
-    "createdAt": "2026-05-19T10:00:00.000Z"
+    "createdAt": "2024-01-15T10:00:00.000Z"
   }
 }
 ```
 
-**Side Effects:**
-- Creates `Notification` for all Admin users: "New Unassigned Lead"
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Validation error |
-| `403` | Phone verification required |
-
 ---
 
-### GET `/api/leads/partner`
+### GET /api/leads/partner
 
-Get all leads assigned to the authenticated partner.
+All leads assigned to the authenticated partner. Phone is masked until OTP is verified.
 
-**Auth:** Partner (KYC Verified)
-
-> Returns `buyerPhone` masked as `+91 98765 XXXXX` until `isOtpVerified: true`.
+**Auth:** PARTNER + KYC verified
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "665def456abc789012345678",
-      "buyerName": "Priya Sharma",
-      "buyerEmail": "priya@example.com",
-      "buyerPhone": "+91 98765 XXXXX",
+      "id": "64lead...",
+      "buyerName": "Suresh Mehta",
+      "buyerEmail": "suresh@example.com",
+      "buyerPhone": "+91XXXXXX3210",
       "status": "ASSIGNED",
       "isOtpVerified": false,
-      "siteVisitScheduledAt": null,
+      "assignedAt": "2024-01-15T12:00:00.000Z",
       "property": {
-        "title": "Spacious 2BHK in Whitefield",
-        "slug": "spacious-2bhk-whitefield-1717000000000",
-        "locality": "Whitefield",
-        "city": "Bangalore"
+        "title": "3 BHK Flat in Baner",
+        "slug": "3-bhk-flat-in-baner-...",
+        "locality": "Baner",
+        "city": "Pune"
       },
-      "createdAt": "2026-05-19T10:00:00.000Z"
+      "createdAt": "2024-01-15T10:00:00.000Z"
     }
   ]
 }
@@ -689,80 +536,49 @@ Get all leads assigned to the authenticated partner.
 
 ---
 
-### GET `/api/leads/partner/:id`
+### GET /api/leads/partner/:id
 
-Get full details of a single assigned lead.
+Single lead detail. Full property record included.
 
-**Auth:** Partner (KYC Verified)
-
-**Path Params:** `id` — Lead ID
-
-**Response `200`:** Full lead object with property details. Phone is masked if `isOtpVerified: false`.
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `404` | Lead not found (or not assigned to this partner) |
-
----
-
-### POST `/api/leads/partner/:id/schedule-visit`
-
-Schedule a site visit. Generates OTP and sends it to buyer via WhatsApp (WATI).
-
-**Auth:** Partner (KYC Verified)
-
-**Rate Limit:** Default
-
-**Request Body:**
-
-```json
-{
-  "scheduledAt": "2026-05-25T10:00:00.000Z"
-}
-```
+**Auth:** PARTNER + KYC verified
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
-    "message": "OTP sent to buyer via WhatsApp. Enter it at the site."
+    "id": "64lead...",
+    "buyerName": "Suresh Mehta",
+    "buyerPhone": "+91XXXXXX3210",
+    "status": "ASSIGNED",
+    "isOtpVerified": false,
+    "siteVisitScheduledAt": null,
+    "visitNotes": null,
+    "visitPhotoUrls": [],
+    "closureDocumentUrls": [],
+    "property": { ... },
+    "createdAt": "2024-01-15T10:00:00.000Z"
   }
 }
 ```
 
-**Side Effects:**
-- Sets `lead.status = "SITE_VISIT_SCHEDULED"`
-- Generates 4-digit OTP, stores encrypted in DB
-- OTP expires after 120 minutes
-- Sends WhatsApp template `site_visit_otp` to buyer via WATI
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Cannot schedule visit on a closed lead |
-| `404` | Lead not found |
+`buyerPhone` is unmasked once `isOtpVerified` is `true`.  
+**Errors:** `404` not found or not assigned to this partner.
 
 ---
 
-### POST `/api/leads/partner/:id/verify-otp`
+### POST /api/leads/partner/:id/schedule-visit
 
-Verify the site visit OTP at the property. Reveals buyer's full phone number on success.
+Schedule a site visit and send a 4-digit OTP to the buyer via WhatsApp.
 
-**Auth:** Partner (KYC Verified)
-
-**Rate Limit:** OTP limiter (5 requests/hour)
+**Auth:** PARTNER + KYC verified
 
 **Request Body:**
 
 ```json
-{
-  "otp": "7342"
-}
+{ "scheduledAt": "2024-01-20T10:00:00.000Z" }
 ```
 
 **Response `200`:**
@@ -770,6 +586,33 @@ Verify the site visit OTP at the property. Reveals buyer's full phone number on 
 ```json
 {
   "success": true,
+  "message": "Success",
+  "data": { "message": "OTP sent to buyer via WhatsApp. Enter it at the site." }
+}
+```
+
+**Errors:** `400` if lead is already closed.
+
+---
+
+### POST /api/leads/partner/:id/verify-otp
+
+Verify the 4-digit site-visit OTP. Reveals buyer's full phone number on success.
+
+**Auth:** PARTNER + KYC verified (rate-limited)
+
+**Request Body:**
+
+```json
+{ "otp": "7412" }
+```
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
   "data": {
     "message": "OTP verified. Buyer contact revealed.",
     "buyerPhone": "+919876543210"
@@ -777,38 +620,24 @@ Verify the site visit OTP at the property. Reveals buyer's full phone number on 
 }
 ```
 
-**Side Effects:**
-- Sets `lead.isOtpVerified = true`, `lead.status = "SITE_VISIT_DONE"`
-- Clears OTP from database
-- After 24h, `whatsappFeedback` job sends buyer feedback request
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Incorrect OTP — `X attempt(s) remaining` |
-| `400` | OTP has expired |
-| `400` | No OTP generated for this lead |
-| `429` | Maximum OTP attempts reached. Contact Admin. |
+**Errors:** `400` invalid/expired OTP · `429` too many attempts (lead locked, contact admin).
 
 ---
 
-### PATCH `/api/leads/partner/:id/document`
+### PATCH /api/leads/partner/:id/document
 
-Upload visit photos and/or closure documents.
+Upload visit notes and files for a lead.
 
-**Auth:** Partner (KYC Verified)
+**Auth:** PARTNER + KYC verified
 
-**Content-Type:** `multipart/form-data`
-
-**Form Fields:**
+**Request:** `multipart/form-data`
 
 | Field | Type | Description |
-|---|---|---|
-| `visitPhotos` | file[] | Up to 10 visit photos (jpg/png/webp, max 10MB each) |
-| `closureDocs` | file[] | Up to 5 closure documents (jpg/png/pdf, max 10MB each) |
-| `visitNotes` | string | Text notes from the visit (max 1000 chars) |
-| `partnerNotes` | string | Internal partner notes (max 1000 chars) |
+|-------|------|-------------|
+| `visitNotes` | string | Notes about the visit |
+| `partnerNotes` | string | Internal notes |
+| `visitPhotos` | file[] | Up to 10 site photos |
+| `closureDocs` | file[] | Up to 5 closure documents |
 
 **Response `200`:**
 
@@ -817,70 +646,52 @@ Upload visit photos and/or closure documents.
   "success": true,
   "message": "Documentation uploaded",
   "data": {
-    "id": "665def456abc789012345678",
-    "visitPhotoUrls": ["https://res.cloudinary.com/..."],
-    "closureDocumentUrls": [],
-    "visitNotes": "Buyer liked the property. Wants to negotiate on price."
+    "id": "64lead...",
+    "visitNotes": "Buyer was very interested.",
+    "visitPhotoUrls": ["https://..."],
+    "closureDocumentUrls": ["https://..."]
   }
 }
 ```
 
 ---
 
-### PATCH `/api/leads/partner/:id/close`
+### PATCH /api/leads/partner/:id/close
 
-Mark a lead as closed (deal done).
+Mark lead as closed. Requires an escrow with `status: HELD` and a captured payment. Irreversible by partner.
 
-**Auth:** Partner (KYC Verified)
+**Auth:** PARTNER + KYC verified
 
-> **Requires** an `EscrowTransaction { status: HELD }` to exist for this lead. Closing without escrow is blocked (PRD Rule 6).
-
-> This action is **irreversible** for partners (PRD Rule 7). Admin can reopen.
+**Request Body:** _(none)_
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
-  "data": {
-    "message": "Lead marked as closed. Admin will review escrow release."
-  }
+  "message": "Success",
+  "data": { "message": "Lead marked as closed. Admin will review escrow release." }
 }
 ```
 
-**Side Effects:**
-- Creates `Notification` for all Admin: "Deal Closed — Escrow Review Needed"
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Escrow payment required before closing a deal |
-| `400` | Lead is already closed |
-| `404` | Lead not found |
+**Errors:** `400` no HELD escrow with captured payment · `400` already closed.
 
 ---
 
-## Users (Dashboard)
+## 4. User Dashboard
 
-All routes under `/api/user` require authentication (`role: USER` or above).
+All `/api/user/*` routes require `authenticate` + `requireUser`.
 
----
+### POST /api/user/verify-phone
 
-### POST `/api/user/verify-phone`
+Request a 4-digit phone verification OTP via WhatsApp.
 
-Request a phone verification OTP via WhatsApp.
-
-**Auth:** Auth (any role)
-
-**Rate Limit:** OTP limiter (5/hour)
+**Auth:** USER (rate-limited)
 
 **Request Body:**
 
 ```json
-{
-  "phone": "+919876543210"
-}
+{ "phone": "+919876543210" }
 ```
 
 **Response `200`:**
@@ -888,32 +699,25 @@ Request a phone verification OTP via WhatsApp.
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": { "message": "OTP sent via WhatsApp" }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `409` | Phone number already in use |
+**Errors:** `409` phone already registered to another account · `429` OTP locked.
 
 ---
 
-### POST `/api/user/verify-phone/otp`
+### POST /api/user/verify-phone/otp
 
-Submit the OTP received via WhatsApp to verify the phone number.
+Verify the 4-digit OTP to confirm phone ownership.
 
-**Auth:** Auth (any role)
-
-**Rate Limit:** OTP limiter (5/hour)
+**Auth:** USER (rate-limited)
 
 **Request Body:**
 
 ```json
-{
-  "otp": "482951"
-}
+{ "otp": "7412" }
 ```
 
 **Response `200`:**
@@ -922,44 +726,38 @@ Submit the OTP received via WhatsApp to verify the phone number.
 {
   "success": true,
   "message": "Phone number verified",
-  "data": { "phoneVerified": true }
+  "data": { "phoneVerified": true, "phone": "+919876543210" }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Incorrect OTP |
-| `400` | OTP has expired |
-| `400` | No OTP pending for this user |
-| `429` | Rate limit exceeded |
+**Errors:** `400` OTP expired or wrong · `429` account locked 30 minutes.
 
 ---
 
-### GET `/api/user/leads`
+### GET /api/user/leads
 
-Get all inquiries submitted by the authenticated user, with status tracking.
+All inquiries submitted by the authenticated user.
 
-**Auth:** User
+**Auth:** USER
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "665def456abc789012345678",
-      "status": "SITE_VISIT_DONE",
-      "buyerMessage": "I am interested in this property.",
+      "id": "64lead...",
+      "buyerName": "Suresh Mehta",
+      "status": "ASSIGNED",
+      "createdAt": "2024-01-15T10:00:00.000Z",
       "property": {
-        "title": "Spacious 2BHK in Whitefield",
-        "slug": "spacious-2bhk-whitefield-1717000000000",
-        "city": "Bangalore",
-        "images": ["https://res.cloudinary.com/..."]
-      },
-      "createdAt": "2026-05-10T10:00:00.000Z"
+        "title": "3 BHK Flat in Baner",
+        "slug": "3-bhk-flat-in-baner-...",
+        "city": "Pune",
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+      }
     }
   ]
 }
@@ -967,50 +765,49 @@ Get all inquiries submitted by the authenticated user, with status tracking.
 
 ---
 
-### POST `/api/user/favorites`
+### POST /api/user/favorites
 
-Save or unsave a property (toggles).
+Toggle property in/out of favorites.
 
-**Auth:** User (phone verified)
+**Auth:** USER + phone verified
 
 **Request Body:**
 
 ```json
-{
-  "propertyId": "664abc123def456789012345"
-}
+{ "propertyId": "64abc..." }
 ```
 
 **Response `200`:**
 
 ```json
-{
-  "success": true,
-  "data": { "favorited": true }
-}
+{ "success": true, "message": "Success", "data": { "favorited": true } }
 ```
+
+`favorited: false` when removed.
 
 ---
 
-### GET `/api/user/documents`
+### GET /api/user/documents
 
-List all KYC/loan documents uploaded by the user.
+All documents in the user's vault.
 
-**Auth:** User
+**Auth:** USER
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "666aaa111bbb222ccc333ddd",
+      "id": "64doc...",
       "documentType": "PAN_CARD",
+      "fileUrl": "https://cdn.realtydoor.in/docs/pan.pdf",
       "fileName": "pan_card.pdf",
-      "fileUrl": "https://res.cloudinary.com/...",
+      "status": "PENDING_REVIEW",
       "isVerified": false,
-      "uploadedAt": "2026-05-15T08:00:00.000Z"
+      "uploadedAt": "2024-01-10T00:00:00.000Z"
     }
   ]
 }
@@ -1018,20 +815,18 @@ List all KYC/loan documents uploaded by the user.
 
 ---
 
-### POST `/api/user/documents`
+### POST /api/user/documents
 
-Upload a KYC or loan document.
+Upload a document.
 
-**Auth:** User (phone verified)
+**Auth:** USER + phone verified
 
-**Content-Type:** `multipart/form-data`
+**Request:** `multipart/form-data`
 
-**Form Fields:**
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `file` | file | Yes | jpg/png/pdf, max 10MB |
-| `documentType` | string | Yes | `PAN_CARD` \| `AADHAR` \| `SALARY_SLIP` \| `FORM_16` \| `BANK_STATEMENT` |
+| Field | Type | Description |
+|-------|------|-------------|
+| `file` | file | Single file |
+| `documentType` | string | `PAN_CARD` · `AADHAR` · `SALARY_SLIP` · `FORM_16` · `BANK_STATEMENT` |
 
 **Response `201`:**
 
@@ -1040,43 +835,44 @@ Upload a KYC or loan document.
   "success": true,
   "message": "Document uploaded",
   "data": {
-    "id": "666aaa111bbb222ccc333ddd",
+    "id": "64doc...",
     "documentType": "PAN_CARD",
+    "fileUrl": "https://...",
     "fileName": "pan_card.pdf",
-    "fileUrl": "https://res.cloudinary.com/...",
-    "isVerified": false
+    "status": "PENDING_REVIEW",
+    "isVerified": false,
+    "uploadedAt": "2024-01-10T00:00:00.000Z"
   }
 }
 ```
 
 ---
 
-### GET `/api/user/subscriptions`
+### GET /api/user/subscriptions
 
-Get all service subscriptions and their tickets.
+All service subscriptions with associated tickets.
 
-**Auth:** User
+**Auth:** USER
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "667bbb222ccc333ddd444eee",
-      "serviceId": "668ccc333ddd444eee555fff",
+      "id": "64sub...",
+      "serviceId": "64svc...",
+      "razorpayOrderId": "order_...",
+      "razorpayPaymentId": "pay_...",
       "paymentStatus": "SUCCESS",
-      "amountPaid": 5999,
-      "startDate": "2026-05-01T00:00:00.000Z",
-      "endDate": "2027-05-01T00:00:00.000Z",
+      "amountPaid": 4999,
+      "currency": "INR",
+      "startDate": "2024-01-10T00:00:00.000Z",
+      "endDate": "2025-01-10T00:00:00.000Z",
       "tickets": [
-        {
-          "id": "669ddd444eee555fff666aaa",
-          "subject": "Bathroom tap broken",
-          "status": "RESOLVED",
-          "createdAt": "2026-05-10T10:00:00.000Z"
-        }
+        { "id": "64tkt...", "subject": "Plumbing leak", "status": "OPEN", "createdAt": "..." }
       ]
     }
   ]
@@ -1085,24 +881,26 @@ Get all service subscriptions and their tickets.
 
 ---
 
-### POST `/api/user/tickets`
+### POST /api/user/tickets
 
-Raise a new service ticket.
+Raise a service ticket under an active subscription.
 
-**Auth:** User (phone verified)
+**Auth:** USER + phone verified
 
 **Request Body:**
 
 ```json
 {
-  "subscriptionId": "667bbb222ccc333ddd444eee",
-  "subject": "Bathroom tap broken",
-  "description": "The cold water tap in the master bathroom has been dripping for 3 days.",
-  "category": "PLUMBING"
+  "subscriptionId": "64sub...",
+  "subject": "Plumbing leak in bathroom",
+  "description": "Slow leak under the wash basin.",
+  "category": "PLUMBING",
+  "priority": "HIGH"
 }
 ```
 
-**Valid categories:** `PLUMBING` | `ELECTRICAL` | `PAINTING` | `GENERAL`
+`category`: `PLUMBING` · `ELECTRICAL` · `PAINTING` · `GENERAL`  
+`priority`: `NORMAL` (default) · `HIGH` · `URGENT`
 
 **Response `201`:**
 
@@ -1111,31 +909,26 @@ Raise a new service ticket.
   "success": true,
   "message": "Ticket raised",
   "data": {
-    "id": "669ddd444eee555fff666aaa",
-    "subject": "Bathroom tap broken",
+    "id": "64tkt...",
+    "subject": "Plumbing leak in bathroom",
     "status": "OPEN",
-    "priority": "NORMAL",
-    "createdAt": "2026-05-19T10:00:00.000Z"
+    "priority": "HIGH",
+    "createdAt": "2024-02-01T00:00:00.000Z"
   }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Service not active (payment not successful) |
-| `404` | Subscription not found |
+**Errors:** `404` subscription not found · `400` service not active.
 
 ---
 
-### PATCH `/api/user/tickets/:id/verify`
+### PATCH /api/user/tickets/:id/verify
 
-Mark a resolved ticket as verified (closes it permanently).
+Confirm service was completed. Moves ticket to `VERIFIED_BY_USER`.
 
-**Auth:** User
+**Auth:** USER
 
-**Path Params:** `id` — Ticket ID
+**Request Body:** _(none)_
 
 **Response `200`:**
 
@@ -1143,152 +936,74 @@ Mark a resolved ticket as verified (closes it permanently).
 {
   "success": true,
   "message": "Ticket verified and closed",
-  "data": {
-    "id": "669ddd444eee555fff666aaa",
-    "status": "VERIFIED_BY_USER",
-    "verifiedAt": "2026-05-20T14:00:00.000Z"
-  }
+  "data": { "id": "64tkt...", "status": "VERIFIED_BY_USER", "verifiedAt": "..." }
 }
 ```
 
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Ticket is not yet resolved |
-| `404` | Ticket not found |
+**Errors:** `404` not found · `400` ticket is not `RESOLVED`.
 
 ---
 
-## Partners
+### POST /api/user/loan
 
-All routes under `/api/partner` require `role: PARTNER` or `ADMIN`.
+Submit a home loan application.
 
----
+**Auth:** USER + phone verified
 
-### POST `/api/partner/kyc`
+**Request Body:**
 
-Submit KYC documents for admin review.
+```json
+{
+  "propertyId": "64abc...",
+  "preferredBank": "HDFC Bank",
+  "loanAmountRequestedPaise": 7000000
+}
+```
 
-**Auth:** Partner (any KYC status)
+All fields are optional. `loanAmountRequestedPaise` is in paise (₹1 = 100 paise).
 
-**Content-Type:** `multipart/form-data`
-
-**Rate Limit:** Upload limiter (50/hour)
-
-**Form Fields:**
-
-| Field | Type | Description |
-|---|---|---|
-| `documents` | file[] | Up to 5 files — RERA certificate, Aadhar, Business PAN (jpg/png/pdf, 10MB each) |
-
-**Response `200`:**
+**Response `201`:**
 
 ```json
 {
   "success": true,
-  "message": "KYC submitted for review. Usually verified within 24 hours.",
+  "message": "Loan application submitted",
   "data": {
-    "kycStatus": "PENDING_REVIEW",
-    "kycDocumentUrls": ["https://res.cloudinary.com/..."]
-  }
-}
-```
-
-**Side Effects:**
-- Creates `Notification` for all Admin: "New KYC Pending Review"
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | KYC already verified |
-
----
-
-### GET `/api/partner/profile`
-
-Get the authenticated partner's profile.
-
-**Auth:** Partner
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "664aaa000bbb111ccc222ddd",
-    "name": "Ravi Kumar",
-    "email": "ravi@ravirealty.com",
-    "phone": "+919876500000",
-    "companyName": "Ravi Properties Pvt Ltd",
-    "partnerSubType": "AGENT",
-    "bio": "8 years experience in Whitefield and Sarjapur.",
-    "kycStatus": "VERIFIED",
-    "kycVerifiedAt": "2026-04-20T10:00:00.000Z",
-    "createdAt": "2026-04-15T08:00:00.000Z"
+    "id": "64loan...",
+    "userId": "64user...",
+    "propertyId": "64abc...",
+    "preferredBank": "HDFC Bank",
+    "loanAmountRequestedPaise": 7000000,
+    "status": "DOCUMENTS_PENDING",
+    "createdAt": "2024-01-15T00:00:00.000Z"
   }
 }
 ```
 
 ---
 
-### PATCH `/api/partner/profile`
+### GET /api/user/loan
 
-Update partner profile fields.
+All loan applications for the authenticated user.
 
-**Auth:** Partner
-
-**Request Body:** (all optional)
-
-```json
-{
-  "name": "Ravi Kumar",
-  "companyName": "Ravi Properties Pvt Ltd",
-  "bio": "Updated bio text.",
-  "websiteUrl": "https://ravirealty.com",
-  "phone": "+919876500001"
-}
-```
-
-> Fields `role`, `kycStatus`, `kycDocumentUrls`, and `email` are silently ignored.
-
-**Response `200`:** Updated profile object.
-
----
-
-### GET `/api/partner/listings`
-
-Get all listings submitted by the authenticated partner.
-
-**Auth:** Partner (KYC Verified)
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|---|---|---|
-| `status` | string | Filter by `publishStatus`: `PENDING_APPROVAL` \| `APPROVED` \| `REJECTED` \| `ARCHIVED` |
+**Auth:** USER
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "664abc123def456789012345",
-      "title": "Spacious 2BHK in Whitefield",
-      "slug": "spacious-2bhk-whitefield-1717000000000",
-      "publishStatus": "APPROVED",
-      "rejectionNote": null,
-      "propertyType": "FLAT",
-      "listingType": "SALE",
-      "city": "Bangalore",
-      "locality": "Whitefield",
-      "price": 5500000,
-      "bhk": 2,
-      "createdAt": "2026-05-01T10:00:00.000Z"
+      "id": "64loan...",
+      "status": "DOCUMENTS_SUBMITTED",
+      "preferredBank": "HDFC Bank",
+      "loanAmountRequestedPaise": 7000000,
+      "sanctionedAmountPaise": null,
+      "adminNote": null,
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "property": { "title": "3 BHK Flat in Baner", "slug": "...", "city": "Pune" }
     }
   ]
 }
@@ -1296,83 +1011,647 @@ Get all listings submitted by the authenticated partner.
 
 ---
 
-### GET `/api/partner/listings/:id`
+### GET /api/user/loan/:id
 
-Get the full details of a single listing owned by the authenticated partner. Used to pre-populate the edit listing form.
+Single loan application (must belong to authenticated user).
 
-**Auth:** Partner (KYC Verified)
-
-**Path Params:** `id` — Property ID
-
-**Response `200`:** Full property object (same shape as `GET /api/properties/:slug` but scoped to this partner and returns all fields including `publishStatus`, `rejectionNote`, and internal admin fields).
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `404` | Listing not found (or not owned by this partner) |
-
----
-
-### GET `/api/partner/finance`
-
-Get deal closure and escrow summary for the partner.
-
-**Auth:** Partner (KYC Verified)
+**Auth:** USER
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
-    "totalLeads": 12,
-    "closedDeals": 3,
-    "escrowHeld": 300000
+    "id": "64loan...",
+    "userId": "64user...",
+    "propertyId": "64abc...",
+    "preferredBank": "HDFC Bank",
+    "loanAmountRequestedPaise": 7000000,
+    "sanctionedAmountPaise": null,
+    "status": "DOCUMENTS_SUBMITTED",
+    "adminNote": null,
+    "bankRefNumber": null,
+    "sanctionedAt": null,
+    "disbursedAt": null,
+    "rejectionReason": null,
+    "submittedDocIds": [],
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-01-15T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` not found or belongs to another user.
+
+---
+
+## 5. Partner
+
+All `/api/partner/*` routes require `authenticate` + `requirePartner`.
+
+### POST /api/partner/kyc
+
+Submit KYC documents for admin review (up to 5 files).
+
+**Auth:** PARTNER (KYC not required to submit)
+
+**Request:** `multipart/form-data`, field name `documents`, up to 5 files.
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "KYC submitted for review. Usually verified within 24 hours.",
+  "data": { "id": "64user...", "kycStatus": "PENDING_REVIEW", "kycDocumentUrls": ["..."] }
+}
+```
+
+**Errors:** `400` KYC already VERIFIED.
+
+---
+
+### GET /api/partner/profile
+
+**Auth:** PARTNER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64user...",
+    "name": "Rajdeep Kumar",
+    "email": "rajdeep@example.com",
+    "phone": "+919876543210",
+    "companyName": "RealtyPro Solutions",
+    "bio": "10 years in Pune real estate.",
+    "profileImageUrl": "https://img.clerk.com/...",
+    "websiteUrl": "https://realtypro.in",
+    "partnerSubType": "AGENT",
+    "kycStatus": "VERIFIED",
+    "kycRejectionNote": null,
+    "kycVerifiedAt": "2024-02-01T00:00:00.000Z",
+    "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
 
 ---
 
-## Admin
+### PATCH /api/partner/profile
 
-All routes under `/api/admin` require `role: ADMIN`.
+Update partner profile. Fields `role`, `kycStatus`, `kycDocumentUrls`, `email` are protected and silently stripped.
 
----
-
-### GET `/api/admin/leads`
-
-Get all leads platform-wide with optional filters.
-
-**Auth:** Admin
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|---|---|---|
-| `status` | string | Filter by `LeadStatus` |
-| `partnerId` | string | Filter by assigned partner |
-| `page` | number | Default: 1 |
-| `limit` | number | Default: 20 |
-
-**Response `200`:** Paginated list of all leads with property and partner details.
-
----
-
-### PATCH `/api/admin/leads/:id/assign`
-
-Assign an unassigned lead to a partner.
-
-**Auth:** Admin
+**Auth:** PARTNER
 
 **Request Body:**
 
 ```json
 {
-  "partnerId": "664aaa000bbb111ccc222ddd"
+  "name": "Rajdeep Kumar",
+  "phone": "+919876543210",
+  "companyName": "RealtyPro Solutions",
+  "bio": "Updated bio.",
+  "websiteUrl": "https://realtypro.in",
+  "partnerSubType": "AGENT"
 }
 ```
+
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Profile updated", "data": { ... } }
+```
+
+---
+
+### GET /api/partner/listings
+
+Partner's own property listings.
+
+**Auth:** PARTNER + KYC verified
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `PENDING_APPROVAL` · `APPROVED` · `REJECTED` · `ARCHIVED` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64prop...",
+      "title": "3 BHK Flat in Baner",
+      "slug": "3-bhk-flat-in-baner-...",
+      "publishStatus": "APPROVED",
+      "rejectionNote": null,
+      "propertyType": "FLAT",
+      "listingType": "SALE",
+      "city": "Pune",
+      "locality": "Baner",
+      "price": 8500000,
+      "bhk": 3,
+      "images": ["https://cdn.realtydoor.in/prop1.jpg"],
+      "createdAt": "2024-01-10T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/partner/listings/:id
+
+Single listing owned by the partner.
+
+**Auth:** PARTNER + KYC verified
+
+**Response `200`:** Full property record.
+
+**Errors:** `404` not found or belongs to another partner.
+
+---
+
+### GET /api/partner/finance
+
+Partner finance / escrow summary.
+
+**Auth:** PARTNER + KYC verified
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": { "totalLeads": 12, "closedDeals": 3, "escrowHeld": 150000 }
+}
+```
+
+`escrowHeld` is the sum in ₹ of HELD escrow on the partner's closed leads.
+
+---
+
+## 6. Services
+
+### GET /api/services
+
+All active services in the catalog.
+
+**Auth:** Public
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64svc...",
+      "name": "Maintenance Premium",
+      "shortDesc": "Annual home maintenance package",
+      "description": "Includes plumbing, electrical, painting.",
+      "price": 4999,
+      "category": "MAINTENANCE",
+      "features": ["Annual AMC", "Priority Support", "24x7 Helpline"],
+      "imageUrl": "https://cdn.realtydoor.in/services/maintenance.jpg",
+      "sortOrder": 1,
+      "isActive": true
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/services/create-order
+
+Create a Razorpay order to purchase a service subscription.
+
+**Auth:** USER + phone verified
+
+**Request Body:**
+
+```json
+{ "serviceId": "64svc..." }
+```
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Order created",
+  "data": {
+    "subscription": {
+      "id": "64sub...",
+      "serviceId": "64svc...",
+      "razorpayOrderId": "order_...",
+      "paymentStatus": "PENDING",
+      "amountPaid": 4999,
+      "endDate": "2025-01-15T00:00:00.000Z"
+    },
+    "razorpayOrder": { "id": "order_...", "amount": 499900, "currency": "INR" },
+    "key": "rzp_live_..."
+  }
+}
+```
+
+**Errors:** `404` service not found or inactive.
+
+---
+
+## 7. Escrow
+
+### POST /api/escrow/create-order
+
+Create a Razorpay escrow order (token advance). Only one active escrow (`PAYMENT_PENDING` or `HELD`) per lead.
+
+**Auth:** USER + phone verified
+
+**Request Body:**
+
+```json
+{ "leadId": "64lead...", "amount": 50000 }
+```
+
+`amount` in ₹.
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Escrow order created",
+  "data": {
+    "escrow": {
+      "id": "64esc...",
+      "leadId": "64lead...",
+      "buyerId": "64user...",
+      "razorpayOrderId": "order_...",
+      "amount": 50000,
+      "currency": "INR",
+      "status": "PAYMENT_PENDING",
+      "createdAt": "2024-01-15T00:00:00.000Z"
+    },
+    "razorpayOrder": { "id": "order_...", "amount": 5000000, "currency": "INR" }
+  }
+}
+```
+
+`payment.captured` webhook moves status to `HELD`.  
+**Errors:** `404` lead not found · `400` active escrow already exists.
+
+---
+
+## 8. Notifications
+
+All `/api/notifications/*` require `authenticate` + `requireUser`.
+
+### GET /api/notifications
+
+Paginated notifications for the authenticated user.
+
+**Auth:** USER
+
+**Query Parameters:** `page`, `limit`
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64notif...",
+        "title": "Listing Approved!",
+        "message": "Your listing is now live.",
+        "type": "PROPERTY_APPROVED",
+        "isRead": false,
+        "linkUrl": "/properties/...",
+        "createdAt": "2024-01-15T10:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 10, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/notifications/:id/read
+
+Mark a notification as read.
+
+**Auth:** USER
+
+**Response `200`:** `{ "success": true, "message": "Marked as read", "data": null }`
+
+---
+
+### PATCH /api/notifications/read-all
+
+Mark all unread notifications as read.
+
+**Auth:** USER
+
+**Response `200`:** `{ "success": true, "message": "All marked as read", "data": null }`
+
+---
+
+## 9. Blog / CMS
+
+### GET /api/blog
+
+Published content blocks (paginated).
+
+**Auth:** Public
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `type` | string | `BLOG` · `FAQ` · `HERO_BANNER` · `TESTIMONIAL` · `ANNOUNCEMENT` · `STATS_BAR` · `NRI_GUIDE` · `TEAM_MEMBER` |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64cms...",
+        "type": "BLOG",
+        "title": "Top 5 areas in Pune to buy in 2024",
+        "slug": "top-5-areas-pune-2024",
+        "content": "<p>Full article content...</p>",
+        "excerpt": "A quick guide to the best neighbourhoods.",
+        "imageUrl": "https://cdn.realtydoor.in/blog/pune-areas.jpg",
+        "author": "Rajdeep",
+        "tags": ["Pune", "Investment", "2024"],
+        "isPublished": true,
+        "publishedAt": "2024-01-10T00:00:00.000Z",
+        "seoTitle": "Top 5 Pune Areas 2024 | RealtyDoor",
+        "seoDesc": "Discover the best areas in Pune."
+      }
+    ],
+    "pagination": { "total": 25, "page": 1, "limit": 20, "totalPages": 2, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### GET /api/blog/:slug
+
+Single published content block by slug.
+
+**Auth:** Public
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64cms...",
+    "type": "BLOG",
+    "title": "Top 5 areas in Pune to buy in 2024",
+    "slug": "top-5-areas-pune-2024",
+    "content": "<p>Full article content...</p>",
+    "excerpt": "A quick guide to the best neighbourhoods.",
+    "imageUrl": "https://cdn.realtydoor.in/blog/pune-areas.jpg",
+    "author": "Rajdeep",
+    "tags": ["Pune", "Investment"],
+    "isPublished": true,
+    "publishedAt": "2024-01-10T00:00:00.000Z",
+    "seoTitle": "Top 5 Pune Areas 2024 | RealtyDoor",
+    "seoDesc": "Discover the best areas in Pune.",
+    "createdAt": "2024-01-05T00:00:00.000Z",
+    "updatedAt": "2024-01-10T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` if not found or not published.
+
+---
+
+## 10. Contact
+
+### POST /api/contact
+
+Submit a contact form (authenticated or public).
+
+**Auth:** Optional
+
+**Request Body:**
+
+```json
+{
+  "name": "Priya Sharma",
+  "email": "priya@example.com",
+  "phone": "+919876543210",
+  "subject": "Inquiry about listing my property",
+  "message": "I would like to know more about listing my property on RealtyDoor."
+}
+```
+
+`phone` optional. `name` min 2. `subject` min 3. `message` min 10 chars.
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Message received. We will get back to you shortly.",
+  "data": { "id": "64msg..." }
+}
+```
+
+---
+
+## 11. Locality Insights
+
+### GET /api/locality-insights
+
+Get locality data for a city+locality pair.
+
+**Auth:** Public
+
+**Query Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `city` | string | Yes | e.g. `Pune` |
+| `locality` | string | Yes | e.g. `Baner` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64loc...",
+    "city": "Pune",
+    "locality": "Baner",
+    "citySlug": "pune",
+    "localitySlug": "baner",
+    "avgPricePerSqftPaise": 850000,
+    "minPricePerSqftPaise": 700000,
+    "maxPricePerSqftPaise": 1050000,
+    "avgRentPerMonthPaise": 3000000,
+    "priceChangeLastMonthPct": 2.5,
+    "nearbyInfra": ["D-Mart", "Orchid School", "Baner Metro"],
+    "dataAsOfDate": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-15T00:00:00.000Z"
+  }
+}
+```
+
+All `Paise` fields are integers (₹1 = 100 paise).  
+**Errors:** `404` no data for that city+locality.
+
+---
+
+### POST /api/locality-insights
+
+Create or update (upsert) locality insight data.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{
+  "city": "Pune",
+  "locality": "Baner",
+  "citySlug": "pune",
+  "localitySlug": "baner",
+  "avgPricePerSqftPaise": 850000,
+  "minPricePerSqftPaise": 700000,
+  "maxPricePerSqftPaise": 1050000,
+  "avgRentPerMonthPaise": 3000000,
+  "priceChangeLastMonthPct": 2.5,
+  "nearbyInfra": ["D-Mart", "Orchid School"],
+  "dataAsOfDate": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Response `201`:** `{ "success": true, "message": "Locality insight saved", "data": { ... } }`
+
+---
+
+### DELETE /api/locality-insights/:id
+
+**Auth:** ADMIN
+
+**Response `200`:** `{ "success": true, "message": "Locality insight deleted", "data": null }`
+
+---
+
+## 12. Webhooks
+
+### POST /api/webhooks/razorpay
+
+Handles `payment.captured` and `payment.failed` from Razorpay.
+
+**Auth:** Razorpay HMAC signature (`x-razorpay-signature` header)
+
+**`payment.captured`:**
+- Escrow → status moves to `HELD`
+- Subscription → status moves to `SUCCESS`, creates service ticket, sends notification + email
+
+**`payment.failed`:**
+- Escrow → status moves to `FAILED`
+- Subscription → status moves to `FAILED`
+
+**Response `200`:** `{ "status": "ok" }`
+
+---
+
+### POST /api/webhooks/clerk
+
+Handles `user.created`, `user.updated`, `user.deleted` from Clerk.
+
+**Auth:** Svix signature (`svix-id`, `svix-timestamp`, `svix-signature` headers)
+
+**Response `200`:** `{ "status": "ok" }`
+
+---
+
+## 13. Admin
+
+All `/api/admin/*` routes require `authenticate` + `requireAdmin`.
+
+### GET /api/admin/leads
+
+All leads (paginated). Filter by status and partner.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `UNASSIGNED` · `ASSIGNED` · `SITE_VISIT_SCHEDULED` · `SITE_VISIT_DONE` · `CLOSED` · `DROPPED` |
+| `partnerId` | string | Filter by assigned partner ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64lead...",
+        "buyerName": "Suresh Mehta",
+        "buyerEmail": "suresh@example.com",
+        "buyerPhone": "+919876543210",
+        "status": "ASSIGNED",
+        "isOtpVerified": false,
+        "createdAt": "2024-01-15T10:00:00.000Z",
+        "property": { "title": "3 BHK Flat in Baner", "slug": "...", "city": "Pune" },
+        "assignedPartner": { "name": "Rajdeep Kumar", "email": "rajdeep@example.com" }
+      }
+    ],
+    "pagination": { "total": 50, "page": 1, "limit": 20, "totalPages": 3, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/leads/:id/assign
+
+Assign lead to a KYC-verified partner.
+
+**Auth:** ADMIN
+
+**Request Body:** `{ "partnerId": "64partner..." }`
 
 **Response `200`:**
 
@@ -1380,213 +1659,176 @@ Assign an unassigned lead to a partner.
 {
   "success": true,
   "message": "Lead assigned",
-  "data": {
-    "id": "665def456abc789012345678",
-    "status": "ASSIGNED",
-    "assignedPartnerId": "664aaa000bbb111ccc222ddd",
-    "assignedAt": "2026-05-19T11:00:00.000Z"
-  }
+  "data": { "id": "64lead...", "status": "ASSIGNED", "assignedPartnerId": "64partner...", "assignedAt": "..." }
 }
 ```
 
-**Side Effects:**
-- Creates `Notification` for partner: "New Lead Assigned"
-- Creates `AuditLog`: `LEAD_ASSIGNED`
-- Sends WhatsApp notice to partner (best-effort)
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Partner not found or not KYC verified |
-| `404` | Lead not found |
+**Errors:** `404` lead not found · `400` partner not found or not KYC verified.
 
 ---
 
-### GET `/api/admin/properties`
+### GET /api/admin/properties
 
-Get all properties pending approval.
+Properties with `PENDING_APPROVAL` status (paginated).
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Query Parameters:** `page`, `limit`
-
-**Response `200`:** Paginated list of properties with `publishStatus: PENDING_APPROVAL`, including partner details.
-
----
-
-### PATCH `/api/admin/properties/:id/approve`
-
-Approve a pending property listing.
-
-**Auth:** Admin
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
-  "message": "Property approved",
-  "data": {
-    "id": "664abc123def456789012345",
-    "publishStatus": "APPROVED"
-  }
-}
-```
-
-**Side Effects:**
-- Creates `Notification` for partner: "Listing Approved!"
-- Creates `AuditLog`: `PROPERTY_APPROVED`
-- Sends approval email to partner
-
----
-
-### PATCH `/api/admin/properties/:id/reject`
-
-Reject a property listing with a note.
-
-**Auth:** Admin
-
-**Request Body:**
-
-```json
-{
-  "note": "Cover photo is blurry. Please reupload with a clear exterior shot."
-}
-```
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "message": "Property rejected",
-  "data": {
-    "id": "664abc123def456789012345",
-    "publishStatus": "REJECTED",
-    "rejectionNote": "Cover photo is blurry..."
-  }
-}
-```
-
-**Side Effects:**
-- Creates `Notification` for partner: "Listing Needs Changes"
-- Creates `AuditLog`: `PROPERTY_REJECTED`
-- Sends rejection email to partner
-
----
-
-### GET `/api/admin/kyc`
-
-Get all pending KYC submissions.
-
-**Auth:** Admin
-
-**Query Parameters:** `page`, `limit`
-
-**Response `200`:** Paginated list of partners with `kycStatus: PENDING_REVIEW`.
-
-```json
-{
-  "success": true,
+  "message": "Success",
   "data": {
     "data": [
       {
-        "id": "664aaa000bbb111ccc222ddd",
-        "name": "Ravi Kumar",
-        "email": "ravi@ravirealty.com",
-        "companyName": "Ravi Properties Pvt Ltd",
+        "id": "64prop...",
+        "title": "3 BHK Flat in Baner",
+        "publishStatus": "PENDING_APPROVAL",
+        "city": "Pune",
+        "createdAt": "2024-01-10T00:00:00.000Z",
+        "partner": { "name": "Rajdeep Kumar", "email": "rajdeep@example.com", "companyName": "RealtyPro Solutions" }
+      }
+    ],
+    "pagination": { "total": 10, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/properties/:id/approve
+
+Approve a pending listing. Notifies partner + sends email.
+
+**Auth:** ADMIN
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Property approved", "data": { "id": "...", "publishStatus": "APPROVED", "rejectionNote": null } }
+```
+
+---
+
+### PATCH /api/admin/properties/:id/reject
+
+Reject a pending listing.
+
+**Auth:** ADMIN
+
+**Request Body:** `{ "note": "Please provide RERA number and clearer images." }`
+
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Property rejected", "data": { "id": "...", "publishStatus": "REJECTED", "rejectionNote": "..." } }
+```
+
+---
+
+### PATCH /api/admin/properties/:id
+
+Admin edit of any property. Protected fields `partnerId` and `slug` are silently stripped. Creates per-field `PropertyEditLog` entries.
+
+**Auth:** ADMIN
+
+**Request Body:** Any property fields except `partnerId`, `slug`.
+
+```json
+{ "price": 9000000, "isVerified": true, "reraNumber": "P52100099999" }
+```
+
+**Response `200`:** `{ "success": true, "message": "Property updated", "data": { ... } }`
+
+---
+
+### GET /api/admin/kyc
+
+Partners with `PENDING_REVIEW` KYC (paginated).
+
+**Auth:** ADMIN
+
+**Query Parameters:** `page`, `limit`
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64user...",
+        "name": "Rajdeep Kumar",
+        "email": "rajdeep@example.com",
+        "companyName": "RealtyPro Solutions",
         "partnerSubType": "AGENT",
-        "kycDocumentUrls": ["https://res.cloudinary.com/..."],
-        "createdAt": "2026-04-15T08:00:00.000Z"
+        "kycDocumentUrls": ["https://cdn.realtydoor.in/kyc/pan.pdf"],
+        "createdAt": "2024-01-01T00:00:00.000Z"
       }
     ],
-    "pagination": { ... }
+    "pagination": { "total": 5, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
   }
 }
 ```
 
 ---
 
-### PATCH `/api/admin/kyc/:userId/verify`
+### PATCH /api/admin/kyc/:userId/verify
 
-Approve or reject a KYC submission.
+Approve or reject partner KYC.
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Request Body:**
 
 ```json
-{
-  "action": "APPROVE",
-  "note": ""
-}
+{ "action": "APPROVE", "note": "Documents verified." }
 ```
 
-Or for rejection:
+`action`: `"APPROVE"` or `"REJECT"`. `note` required when rejecting.
 
-```json
-{
-  "action": "REJECT",
-  "note": "RERA certificate appears expired. Resubmit with a valid certificate."
-}
-```
-
-**`action`:** `"APPROVE"` | `"REJECT"`
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "message": "KYC approved"
-}
-```
-
-**Side Effects:**
-- Creates `Notification` for partner
-- Creates `AuditLog`: `KYC_APPROVE` or `KYC_REJECT`
-- Sends verification email to partner (on approve)
+**Response `200`:** `{ "success": true, "message": "KYC approved", "data": null }`
 
 ---
 
-### GET `/api/admin/revenue`
+### GET /api/admin/revenue
 
-Revenue dashboard — month-to-date summary.
+Platform revenue summary (MTD = month-to-date).
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
-    "escrowHeld": {
-      "amount": 2500000,
-      "count": 8
-    },
-    "escrowReleasedMTD": {
-      "amount": 1200000,
-      "count": 4
-    },
-    "serviceRevenueMTD": {
-      "amount": 89985,
-      "count": 15
-    },
-    "closedLeadsMTD": 4,
-    "totalLeads": 124
+    "escrowHeld":        { "amount": 250000, "count": 5 },
+    "escrowReleasedMTD": { "amount": 150000, "count": 3 },
+    "serviceRevenueMTD": { "amount": 49990,  "count": 10 },
+    "closedLeadsMTD": 3,
+    "totalLeads": 50
   }
 }
 ```
 
+Amounts in ₹.
+
 ---
 
-### GET `/api/admin/audit-logs`
+### GET /api/admin/audit-logs
 
-Full audit trail of all admin actions.
+All audit log entries (paginated, newest first).
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Query Parameters:** `page`, `limit`
 
@@ -1595,43 +1837,47 @@ Full audit trail of all admin actions.
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
     "data": [
       {
-        "id": "66aaaa000bbb111ccc222ddd",
-        "adminId": "664admin000bbb111ccc222",
-        "action": "LEAD_ASSIGNED",
-        "targetType": "Lead",
-        "targetId": "665def456abc789012345678",
-        "before": "{\"status\":\"UNASSIGNED\"}",
-        "after": "{\"status\":\"ASSIGNED\",\"assignedPartnerId\":\"664aaa...\"}",
-        "ipAddress": "103.58.12.44",
-        "createdAt": "2026-05-19T11:00:00.000Z"
+        "id": "64audit...",
+        "adminId": "64admin...",
+        "action": "PROPERTY_APPROVED",
+        "targetType": "Property",
+        "targetId": "64prop...",
+        "before": "{\"publishStatus\":\"PENDING_APPROVAL\"}",
+        "after": "{\"publishStatus\":\"APPROVED\"}",
+        "ipAddress": "103.x.x.x",
+        "createdAt": "2024-01-15T12:00:00.000Z"
       }
     ],
-    "pagination": { ... }
+    "pagination": { "total": 200, "page": 1, "limit": 20, "totalPages": 10, "hasNext": true, "hasPrev": false }
   }
 }
 ```
 
+`before` and `after` are JSON strings.
+
 ---
 
-### GET `/api/admin/partners`
+### GET /api/admin/partners
 
-Performance metrics for all verified partners.
+Performance metrics for all KYC-verified partners.
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": [
     {
-      "id": "664aaa000bbb111ccc222ddd",
-      "name": "Ravi Kumar",
-      "companyName": "Ravi Properties Pvt Ltd",
+      "id": "64user...",
+      "name": "Rajdeep Kumar",
+      "companyName": "RealtyPro Solutions",
       "partnerSubType": "AGENT",
       "totalLeads": 12,
       "closedLeads": 3,
@@ -1644,31 +1890,24 @@ Performance metrics for all verified partners.
 
 ---
 
-### PATCH `/api/admin/escrow/:id/release`
+### PATCH /api/admin/escrow/:id/release
 
-Release held escrow funds to seller's Razorpay account.
+Release a HELD escrow to seller via Razorpay. Requires `HELD` status + captured payment.
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Request Body:**
 
 ```json
 {
-  "sellerAccountId": "acc_xxxxxxxxxxxxxxxx",
-  "partnerShare": 80000,
-  "platformFee": 20000,
-  "note": "Allocation letter verified. Releasing to builder."
+  "sellerAccountId": "acc_...",
+  "partnerShare": 5000,
+  "platformFee": 2000,
+  "note": "Release approved."
 }
 ```
 
-| Field | Required | Description |
-|---|---|---|
-| `sellerAccountId` | No | Razorpay linked account ID. If omitted, escrow is marked released without triggering a Razorpay transfer (manual payout case). |
-| `partnerShare` | No | Amount in rupees transferred to partner |
-| `platformFee` | No | Platform commission in rupees |
-| `note` | No | Admin note stored in `adminNote` field |
-
-> `partnerShare`, `platformFee`, and `note` are concatenated into `adminNote` for audit trail storage.
+All fields optional. Omitting `sellerAccountId` skips Razorpay transfer.
 
 **Response `200`:**
 
@@ -1676,212 +1915,266 @@ Release held escrow funds to seller's Razorpay account.
 {
   "success": true,
   "message": "Escrow released",
-  "data": {
-    "id": "66bbb111ccc222ddd333eee",
-    "status": "RELEASED",
-    "releasedAt": "2026-05-20T10:00:00.000Z"
-  }
+  "data": { "id": "64esc...", "status": "RELEASED", "releasedAt": "...", "adminNote": "..." }
 }
 ```
 
-**Side Effects:**
-- Calls Razorpay Route transfer API (only if `sellerAccountId` is provided)
-- Creates `AuditLog`: `ESCROW_RELEASED`
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Cannot release escrow with status `REFUNDED` |
-| `400` | Payment not yet captured |
-| `404` | Escrow not found |
+**Errors:** `400` not HELD · `400` payment not captured.
 
 ---
 
-### POST `/api/admin/escrow/:id/refund`
+### POST /api/admin/escrow/:id/refund
 
-Refund held escrow to buyer (deal fell through).
+Refund a HELD escrow to buyer. Sends buyer notification.
 
-**Auth:** Admin
+**Auth:** ADMIN
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Escrow refunded", "data": { "id": "64esc...", "status": "REFUNDED", "refundedAt": "..." } }
+```
+
+**Errors:** `400` not HELD · `400` payment not captured.
+
+---
+
+### GET /api/admin/escrow
+
+All escrow transactions (paginated).
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `PAYMENT_PENDING` · `HELD` · `RELEASED` · `REFUNDED` · `FAILED` · `CANCELLED` |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
-  "message": "Escrow refunded",
+  "message": "Success",
   "data": {
-    "id": "66bbb111ccc222ddd333eee",
-    "status": "REFUNDED",
-    "refundedAt": "2026-05-20T10:30:00.000Z"
+    "data": [
+      {
+        "id": "64esc...",
+        "leadId": "64lead...",
+        "buyerId": "64user...",
+        "razorpayOrderId": "order_...",
+        "razorpayPaymentId": "pay_...",
+        "amount": 50000,
+        "currency": "INR",
+        "status": "HELD",
+        "heldAt": "2024-01-16T00:00:00.000Z",
+        "createdAt": "2024-01-15T00:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 20, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
   }
 }
 ```
 
-**Side Effects:**
-- Calls Razorpay refund API
-- Creates `AuditLog`: `ESCROW_REFUNDED`
-- Creates `Notification` for buyer: "Escrow Refunded"
-
 ---
 
-### GET `/api/admin/escrow`
+### POST /api/admin/content
 
-List all escrow transactions.
+Create a CMS content block.
 
-**Auth:** Admin
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|---|---|---|
-| `status` | string | `HELD` \| `RELEASED` \| `REFUNDED` |
-| `page` | number | Default: 1 |
-
-**Response `200`:** Paginated list of `EscrowTransaction` records.
-
----
-
-### POST `/api/admin/content`
-
-Create a CMS content block (blog post, banner, testimonial, etc.).
-
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Request Body:**
 
 ```json
 {
   "type": "BLOG",
-  "title": "Top 5 localities in Bangalore for 2026",
-  "slug": "top-5-localities-bangalore-2026",
-  "content": "<p>Detailed article content here...</p>",
-  "excerpt": "A quick guide to the best investment localities.",
-  "author": "RealtyDoor Research",
-  "tags": ["Bangalore", "Investment", "2026"],
+  "title": "Top 5 areas in Pune to buy in 2024",
+  "slug": "top-5-areas-pune-2024",
+  "content": "<p>Full article content here...</p>",
+  "excerpt": "A quick guide to the best neighbourhoods.",
+  "imageUrl": "https://cdn.realtydoor.in/blog/pune-areas.jpg",
+  "author": "Rajdeep",
+  "tags": ["Pune", "Investment", "2024"],
   "isPublished": true,
-  "seoTitle": "Top 5 Bangalore Localities 2026 | RealtyDoor",
-  "seoDesc": "Discover the best localities to invest in Bangalore in 2026."
+  "seoTitle": "Top 5 Pune Areas 2024 | RealtyDoor",
+  "seoDesc": "Discover the best areas to invest in Pune."
 }
 ```
 
-**Valid types:** `BLOG` | `FAQ` | `HERO_BANNER` | `TESTIMONIAL` | `ANNOUNCEMENT` | `STATS_BAR` | `NRI_GUIDE` | `TEAM_MEMBER`
+If `isPublished: true` and `publishedAt` omitted, defaults to now.
 
-**Response `201`:** Created content block.
-
----
-
-### PATCH `/api/admin/content/:id`
-
-Update an existing content block.
-
-**Auth:** Admin
-
-**Request Body:** Any subset of `POST /api/admin/content` fields.
-
-**Response `200`:** Updated content block.
+**Response `201`:** `{ "success": true, "message": "Created", "data": { "id": "64cms...", ... } }`
 
 ---
 
-### DELETE `/api/admin/content/:id`
+### PATCH /api/admin/content/:id
 
-Delete a content block.
+Update a CMS content block.
 
-**Auth:** Admin
+**Auth:** ADMIN
 
-**Response `204`:** No content.
+**Request Body:** Partial content block fields.
+
+**Response `200`:** `{ "success": true, "message": "Success", "data": { ... } }`
 
 ---
 
-### POST `/api/admin/notifications/broadcast`
+### DELETE /api/admin/content/:id
 
-Send a notification to a group of users.
+Delete a CMS content block.
 
-**Auth:** Admin
+**Auth:** ADMIN
+
+**Response `204`:** _(no body)_
+
+---
+
+### POST /api/admin/notifications/broadcast
+
+Broadcast notification to all users of specified roles.
+
+**Auth:** ADMIN
 
 **Request Body:**
 
 ```json
 {
-  "roles": ["USER"],
-  "title": "New Feature: Video Tours Now Live!",
-  "message": "You can now request video tours from NRI-friendly listings.",
+  "roles": ["USER", "PARTNER"],
+  "title": "System Maintenance",
+  "message": "Platform down Sunday 2AM–4AM.",
   "type": "ANNOUNCEMENT"
 }
 ```
 
-**`roles`:** Array of `USER` | `PARTNER` | `ADMIN`. Omit to send to all users.
+`roles` optional — omit to broadcast to all users.
 
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "message": "Broadcast sent",
-  "data": { "count": 1452 }
-}
-```
+**Response `200`:** `{ "success": true, "message": "Broadcast sent", "data": { ... } }`
 
 ---
 
-### GET `/api/admin/users`
+### GET /api/admin/loan
 
-List all platform users with optional filters.
+All loan applications (paginated).
 
-**Auth:** Admin
+**Auth:** ADMIN
 
 **Query Parameters:**
 
 | Param | Type | Description |
-|---|---|---|
-| `role` | string | Filter by role: `USER` \| `PARTNER` \| `ADMIN` |
-| `search` | string | Partial match on name or email |
-| `page` | number | Default: 1 |
-| `limit` | number | Default: 20 |
+|-------|------|-------------|
+| `status` | string | `DOCUMENTS_PENDING` · `DOCUMENTS_SUBMITTED` · `DOCUMENTS_VERIFIED` · `SENT_TO_BANK` · `AWAITING_SANCTION` · `SANCTIONED` · `DISBURSED` · `REJECTED` |
+| `userId` | string | Filter by user ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
 
 **Response `200`:**
 
 ```json
 {
   "success": true,
+  "message": "Success",
   "data": {
     "data": [
       {
-        "id": "664aaa000bbb111ccc222ddd",
-        "name": "Ravi Kumar",
-        "email": "ravi@ravirealty.com",
-        "phone": "+919876500000",
-        "phoneVerified": true,
-        "role": "PARTNER",
-        "kycStatus": "VERIFIED",
-        "partnerSubType": "AGENT",
-        "createdAt": "2026-04-15T08:00:00.000Z"
+        "id": "64loan...",
+        "status": "DOCUMENTS_SUBMITTED",
+        "preferredBank": "HDFC Bank",
+        "loanAmountRequestedPaise": 7000000,
+        "sanctionedAmountPaise": null,
+        "adminNote": null,
+        "createdAt": "2024-01-15T00:00:00.000Z",
+        "user": { "name": "Suresh Mehta", "email": "suresh@example.com", "phone": "+919876543210" },
+        "property": { "title": "3 BHK Flat in Baner", "slug": "...", "city": "Pune" }
       }
     ],
-    "pagination": { "total": 240, "page": 1, "limit": 20, "totalPages": 12, "hasNext": true, "hasPrev": false }
+    "pagination": { "total": 30, "page": 1, "limit": 20, "totalPages": 2, "hasNext": true, "hasPrev": false }
   }
 }
 ```
 
 ---
 
-### PATCH `/api/admin/users/:id/role`
+### PATCH /api/admin/loan/:id/status
 
-Promote or demote a user's role.
+Update loan status. Sets `sanctionedAt` on `SANCTIONED`, `disbursedAt` on `DISBURSED`.
 
-**Auth:** Admin
-
-**Path Params:** `id` — User ID
+**Auth:** ADMIN
 
 **Request Body:**
 
 ```json
+{ "status": "SANCTIONED", "adminNote": "Sanctioned by HDFC. Ref: HDFC2024012345." }
+```
+
+**Response `200`:**
+
+```json
 {
-  "role": "PARTNER"
+  "success": true,
+  "message": "Loan status updated",
+  "data": { "id": "64loan...", "status": "SANCTIONED", "sanctionedAt": "...", "disbursedAt": null }
 }
 ```
 
-**`role`:** `"USER"` | `"PARTNER"` | `"ADMIN"`
+**Errors:** `404` loan not found.
+
+---
+
+### GET /api/admin/users
+
+All users (paginated). Filter by role or search.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `role` | string | `USER` · `PARTNER` · `ADMIN` |
+| `search` | string | Case-insensitive search on name or email |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64user...",
+        "name": "Suresh Mehta",
+        "email": "suresh@example.com",
+        "phone": "+919876543210",
+        "phoneVerified": true,
+        "role": "USER",
+        "kycStatus": "NOT_SUBMITTED",
+        "partnerSubType": null,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 120, "page": 1, "limit": 20, "totalPages": 6, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/users/:id/role
+
+Change a user's role. Syncs to Clerk publicMetadata and creates audit log.
+
+**Auth:** ADMIN
+
+**Request Body:** `{ "role": "PARTNER" }`
 
 **Response `200`:**
 
@@ -1889,453 +2182,60 @@ Promote or demote a user's role.
 {
   "success": true,
   "message": "Role updated to PARTNER",
-  "data": {
-    "id": "664aaa000bbb111ccc222ddd",
-    "name": "Ravi Kumar",
-    "email": "ravi@ravirealty.com",
-    "role": "PARTNER"
-  }
+  "data": { "id": "64user...", "name": "Suresh Mehta", "email": "suresh@example.com", "role": "PARTNER", "clerkId": "user_2abc..." }
 }
 ```
 
-**Side Effects:**
-- Creates `AuditLog`: `ROLE_CHANGED` with before/after role snapshot
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Invalid role |
-| `404` | User not found |
+**Errors:** `400` invalid role · `404` user not found.
 
 ---
 
-## Escrow
+## Enums Reference
 
-### POST `/api/escrow/create-order`
-
-Create a Razorpay Route escrow order for a token advance payment.
-
-**Auth:** User (phone verified)
-
-**Request Body:**
-
-```json
-{
-  "leadId": "665def456abc789012345678",
-  "amount": 100000
-}
-```
-
-**`amount`:** Token advance in rupees (e.g. `100000` = ₹1,00,000)
-
-**Response `201`:**
-
-```json
-{
-  "success": true,
-  "message": "Escrow order created",
-  "data": {
-    "escrow": {
-      "id": "66bbb111ccc222ddd333eee",
-      "status": "HELD",
-      "amount": 100000
-    },
-    "razorpayOrder": {
-      "id": "order_xxxxxxxxxxx",
-      "amount": 10000000,
-      "currency": "INR"
-    }
-  }
-}
-```
-
-> Use `razorpayOrder.id` to open the Razorpay checkout on the frontend.
-> After payment, Razorpay fires the `payment.captured` webhook which automatically updates the escrow record.
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `400` | Escrow already held for this lead |
-| `404` | Lead not found |
-
----
-
-## Services
-
-### GET `/api/services`
-
-List all active post-purchase services.
-
-**Auth:** Public
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "668ccc333ddd444eee555fff",
-      "name": "Annual Maintenance Plan",
-      "shortDesc": "12 months of home maintenance coverage",
-      "price": 5999,
-      "category": "MAINTENANCE",
-      "features": ["Plumbing", "Electrical", "Painting touch-up", "24h support"],
-      "isActive": true,
-      "sortOrder": 1,
-      "imageUrl": "https://res.cloudinary.com/..."
-    }
-  ]
-}
-```
-
----
-
-### POST `/api/services/create-order`
-
-Create a Razorpay order for a service subscription purchase.
-
-**Auth:** User (phone verified)
-
-**Request Body:**
-
-```json
-{
-  "serviceId": "668ccc333ddd444eee555fff"
-}
-```
-
-**Response `201`:**
-
-```json
-{
-  "success": true,
-  "message": "Order created",
-  "data": {
-    "subscription": {
-      "id": "667bbb222ccc333ddd444eee",
-      "paymentStatus": "PENDING",
-      "amountPaid": 5999
-    },
-    "razorpayOrder": {
-      "id": "order_xxxxxxxxxxx",
-      "amount": 599900,
-      "currency": "INR"
-    },
-    "key": "rzp_live_xxxxxxxx"
-  }
-}
-```
-
-> After payment, the `payment.captured` webhook activates the subscription and creates the first service ticket.
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `404` | Service not found or inactive |
-
----
-
-## CMS / Blog
-
-### GET `/api/blog`
-
-Get published content blocks (blogs, testimonials, banners, etc.).
-
-**Auth:** Public
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|---|---|---|
-| `type` | string | `BLOG` \| `TESTIMONIAL` \| `HERO_BANNER` \| `STATS_BAR` \| etc. |
-| `page` | number | Default: 1 |
-| `limit` | number | Default: 20 |
-
-**Response `200`:** Paginated list of `ContentBlock` records where `isPublished: true`.
-
----
-
-### GET `/api/blog/:slug`
-
-Get a single published content block by slug.
-
-**Auth:** Public
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "66ddd444eee555fff666aaa",
-    "type": "BLOG",
-    "title": "Top 5 localities in Bangalore for 2026",
-    "slug": "top-5-localities-bangalore-2026",
-    "content": "<p>Detailed article content...</p>",
-    "excerpt": "A quick guide to the best investment localities.",
-    "author": "RealtyDoor Research",
-    "tags": ["Bangalore", "Investment"],
-    "isPublished": true,
-    "publishedAt": "2026-05-01T08:00:00.000Z",
-    "seoTitle": "Top 5 Bangalore Localities 2026 | RealtyDoor",
-    "seoDesc": "Discover the best localities..."
-  }
-}
-```
-
-**Errors:**
-
-| Status | Message |
-|---|---|
-| `404` | Content not found |
-
----
-
-## Notifications
-
-All routes require authentication.
-
----
-
-### GET `/api/notifications`
-
-Get notifications for the authenticated user.
-
-**Auth:** User (any role)
-
-**Query Parameters:** `page`, `limit`
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "data": [
-      {
-        "id": "66eee555fff666aaa777bbb",
-        "title": "New Lead Assigned",
-        "message": "A new buyer lead has been assigned to you.",
-        "type": "LEAD_ASSIGNED",
-        "isRead": false,
-        "linkUrl": "/partner/leads/665def456abc789012345678",
-        "createdAt": "2026-05-19T11:00:00.000Z"
-      }
-    ],
-    "pagination": { ... }
-  }
-}
-```
-
----
-
-### PATCH `/api/notifications/:id/read`
-
-Mark a single notification as read.
-
-**Auth:** User (any role)
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "message": "Marked as read"
-}
-```
-
----
-
-### PATCH `/api/notifications/read-all`
-
-Mark all notifications as read.
-
-**Auth:** User (any role)
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "message": "All marked as read"
-}
-```
-
----
-
-## Contact
-
-### POST `/api/contact`
-
-Submit a general contact form message.
-
-**Auth:** Public (optionally authenticated)
-
-**Rate Limit:** Default (100 req / 15 min)
-
-**Request Body:**
-
-```json
-{
-  "name": "Amit Verma",
-  "email": "amit@example.com",
-  "phone": "+919876500001",
-  "subject": "Partnership Inquiry",
-  "message": "I am interested in listing my properties on RealtyDoor. Please get in touch."
-}
-```
-
-**Required fields:** `name`, `email`, `subject`, `message`
-
-**Response `201`:**
-
-```json
-{
-  "success": true,
-  "message": "Message received. We will get back to you shortly.",
-  "data": { "id": "66fff666aaa777bbb888ccc" }
-}
-```
-
----
-
-## Webhooks
-
-### POST `/api/webhooks/razorpay`
-
-Receives signed webhook events from Razorpay.
-
-**Auth:** Razorpay HMAC signature (header: `x-razorpay-signature`)
-
-> Do **not** call this endpoint from your frontend. It is called by Razorpay's servers.
-
-**Handled Events:**
-
-| Event | Action |
-|---|---|
-| `payment.captured` | If escrow order → sets `EscrowTransaction.status = HELD`. If service order → activates `UserSubscription`, creates first `ServiceTicket`, sends activation email. |
-| `payment.failed` | Sets `UserSubscription.paymentStatus = FAILED` |
-
-**Response `200`:**
-
-```json
-{ "status": "ok" }
-```
-
-**Response `400`:**
-
-```json
-{ "error": "Invalid signature" }
-```
-
----
-
-### POST `/api/webhooks/clerk`
-
-Receives signed webhook events from Clerk for user lifecycle sync.
-
-**Auth:** Svix signature (`svix-id`, `svix-timestamp`, `svix-signature` headers)
-
-> Do **not** call this endpoint from your frontend. It is called by Clerk's servers.
->
-> Configure in Clerk Dashboard → Webhooks → Add Endpoint. Set `CLERK_WEBHOOK_SECRET` in `.env` to the signing secret provided.
-
-**Handled Events:**
-
-| Event | Action |
-|---|---|
-| `user.created` | Creates `User` record in DB with `role: USER`, captures `name`, `email`, `phone`, `profileImageUrl`. Also stamps `publicMetadata.role = 'USER'` in Clerk so the JWT Template includes it. |
-| `user.updated` | Syncs `name`, `email`, `profileImageUrl` |
-| `user.deleted` | Hard-deletes `User` record from DB |
-
-**Response `200`:**
-
-```json
-{ "status": "ok" }
-```
-
-**Response `400`:**
-
-```json
-{ "error": "Invalid signature" }
-```
-
----
-
-## Notification Types Reference
-
-| Type | Sent To | Trigger |
-|---|---|---|
-| `LEAD_NEW` | Admin | New unassigned lead submitted |
-| `LEAD_ASSIGNED` | Partner | Lead assigned by admin |
-| `PROPERTY_APPROVED` | Partner | Listing approved by admin |
-| `PROPERTY_REJECTED` | Partner | Listing rejected by admin |
-| `KYC_PENDING` | Admin | Partner submitted KYC |
-| `KYC_UPDATE` | Partner | KYC approved or rejected |
-| `DEAL_CLOSED` | Admin | Partner marked lead as closed |
-| `ESCROW_REFUNDED` | User | Escrow refunded to buyer |
-| `SERVICE_ACTIVATED` | User | Service subscription activated |
-| `ANNOUNCEMENT` | Any | Admin broadcast |
-
----
-
-## Lead Status Lifecycle
-
-```
-UNASSIGNED
-    ↓ (Admin assigns)
-ASSIGNED
-    ↓ (Partner schedules visit)
-SITE_VISIT_SCHEDULED
-    ↓ (Partner verifies OTP at site)
-SITE_VISIT_DONE
-    ↓ (Escrow paid + Partner closes)
-CLOSED
-```
-
-> A lead can also transition to `DROPPED` at any step before `CLOSED` (partner action).
-> Only **Admin** can reopen a `CLOSED` lead.
-
----
-
-## Escrow Status Lifecycle
-
-```
-(order created) → HELD → RELEASED
-                       ↘ REFUNDED
-```
-
----
-
-## Enum Reference
+### Role
+`USER` · `PARTNER` · `ADMIN`
 
 ### PropertyType
-`FLAT` | `INDEPENDENT_HOUSE` | `VILLA` | `PLOT` | `COMMERCIAL_OFFICE` | `RETAIL_SHOP`
+`FLAT` · `INDEPENDENT_HOUSE` · `VILLA` · `PLOT` · `COMMERCIAL_OFFICE` · `RETAIL_SHOP`
 
 ### ListingType
-`SALE` | `RENT` | `LEASE`
+`SALE` · `RENT` · `LEASE`
 
 ### PublishStatus
-`PENDING_APPROVAL` | `APPROVED` | `REJECTED` | `ARCHIVED`
+`PENDING_APPROVAL` · `APPROVED` · `REJECTED` · `ARCHIVED`
 
 ### PropertyStatus
-`READY_TO_MOVE` | `UNDER_CONSTRUCTION` | `SOLD` | `RENTED`
+`READY_TO_MOVE` · `UNDER_CONSTRUCTION` · `SOLD` · `RENTED`
 
 ### LeadStatus
-`UNASSIGNED` | `ASSIGNED` | `SITE_VISIT_SCHEDULED` | `SITE_VISIT_DONE` | `CLOSED` | `DROPPED`
-
-### KycStatus
-`NOT_SUBMITTED` | `PENDING_REVIEW` | `VERIFIED` | `REJECTED`
-
-### TicketStatus
-`OPEN` | `IN_PROGRESS` | `RESOLVED` | `VERIFIED_BY_USER`
+`UNASSIGNED` · `ASSIGNED` · `SITE_VISIT_SCHEDULED` · `SITE_VISIT_DONE` · `CLOSED` · `DROPPED`
 
 ### EscrowStatus
-`HELD` | `RELEASED` | `REFUNDED`
+`PAYMENT_PENDING` · `HELD` · `RELEASED` · `REFUNDED` · `FAILED` · `CANCELLED`
 
-### DocumentType
-`PAN_CARD` | `AADHAR` | `SALARY_SLIP` | `FORM_16` | `BANK_STATEMENT`
+### KycStatus
+`NOT_SUBMITTED` · `PENDING_REVIEW` · `VERIFIED` · `REJECTED`
+
+### LoanStatus
+`DOCUMENTS_PENDING` · `DOCUMENTS_SUBMITTED` · `DOCUMENTS_VERIFIED` · `SENT_TO_BANK` · `AWAITING_SANCTION` · `SANCTIONED` · `DISBURSED` · `REJECTED`
+
+### PartnerSubType
+`AGENT` · `BUILDER` · `ADVISOR` · `OWNER`
+
+### PaymentStatus (subscriptions)
+`PENDING` · `SUCCESS` · `FAILED` · `REFUNDED`
+
+### TicketStatus
+`OPEN` · `IN_PROGRESS` · `RESOLVED` · `VERIFIED_BY_USER`
+
+### DocumentStatus
+`PENDING_REVIEW` · `APPROVED` · `REJECTED` · `EXPIRED`
+
+### CommissionStatus
+`PENDING` · `INVOICED` · `COLLECTED` · `DISPUTED`
+
+### ContentBlock Type
+`BLOG` · `FAQ` · `HERO_BANNER` · `TESTIMONIAL` · `ANNOUNCEMENT` · `STATS_BAR` · `NRI_GUIDE` · `TEAM_MEMBER`
+
+### Notification Type (examples)
+`LEAD_NEW` · `LEAD_ASSIGNED` · `PROPERTY_APPROVED` · `PROPERTY_REJECTED` · `PROPERTY_EDITED_BY_ADMIN` · `KYC_PENDING` · `KYC_UPDATE` · `DEAL_CLOSED` · `ESCROW_REFUNDED` · `SERVICE_ACTIVATED` · `LOAN_STATUS_UPDATE` · `ANNOUNCEMENT`

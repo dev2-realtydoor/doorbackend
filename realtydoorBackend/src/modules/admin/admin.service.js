@@ -213,6 +213,97 @@ async function getRevenueSummary() {
   };
 }
 
+// ─── PROPERTY EDIT (Admin) ───────────────────────────────────────────────────
+
+async function editProperty(propertyId, data, adminId, adminName, ip) {
+  const property = await prisma.property.findUnique({ where: { id: propertyId } });
+  if (!property) throw new ApiError(404, 'Property not found');
+
+  const FORBIDDEN = ['partnerId', 'slug'];
+  FORBIDDEN.forEach((f) => delete data[f]);
+
+  // Build per-field edit logs for every changed value
+  const editLogRows = Object.entries(data)
+    .filter(([field, newVal]) => String(property[field] ?? '') !== String(newVal ?? ''))
+    .map(([field, newVal]) => ({
+      propertyId,
+      editedBy:     adminId,
+      editedByName: adminName,
+      fieldChanged: field,
+      oldValue:     property[field] != null ? JSON.stringify(property[field]) : null,
+      newValue:     newVal     != null ? JSON.stringify(newVal)              : null,
+    }));
+
+  const [updated] = await prisma.$transaction([
+    prisma.property.update({ where: { id: propertyId }, data }),
+    ...editLogRows.map((row) => prisma.propertyEditLog.create({ data: row })),
+  ]);
+
+  if (editLogRows.length > 0) {
+    await createNotification({
+      userId:  property.partnerId,
+      title:   'Your listing was edited by Admin',
+      message: `Admin updated ${editLogRows.length} field(s) on "${property.title}". Changes are visible on your listing.`,
+      type:    'PROPERTY_EDITED_BY_ADMIN',
+      linkUrl: `/partner/listings/${propertyId}`,
+    });
+
+    await createAuditLog({
+      adminId, action: 'PROPERTY_EDITED', targetType: 'Property', targetId: propertyId,
+      before: Object.fromEntries(editLogRows.map((r) => [r.fieldChanged, r.oldValue])),
+      after:  Object.fromEntries(editLogRows.map((r) => [r.fieldChanged, r.newValue])),
+      ipAddress: ip,
+    });
+  }
+
+  return updated;
+}
+
+// ─── LOAN MANAGEMENT (Admin) ─────────────────────────────────────────────────
+
+async function getAllLoans(filters, skip, limit) {
+  const where = {};
+  if (filters.status)   where.status   = filters.status;
+  if (filters.userId)   where.userId   = filters.userId;
+
+  const [data, total] = await Promise.all([
+    prisma.loanApplication.findMany({
+      where, skip, take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user:     { select: { name: true, email: true, phone: true } },
+        property: { select: { title: true, slug: true, city: true } },
+      },
+    }),
+    prisma.loanApplication.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function updateLoanStatus(loanId, status, adminNote, adminId) {
+  const loan = await prisma.loanApplication.findUnique({ where: { id: loanId } });
+  if (!loan) throw new ApiError(404, 'Loan application not found');
+
+  const extraFields = {};
+  if (status === 'SANCTIONED') extraFields.sanctionedAt = new Date();
+  if (status === 'DISBURSED')  extraFields.disbursedAt  = new Date();
+
+  const updated = await prisma.loanApplication.update({
+    where: { id: loanId },
+    data: { status, adminNote: adminNote || loan.adminNote, ...extraFields },
+  });
+
+  await createNotification({
+    userId:  loan.userId,
+    title:   'Loan Application Update',
+    message: `Your loan application status has been updated to ${status}.`,
+    type:    'LOAN_STATUS_UPDATE',
+    linkUrl: `/dashboard/loan/${loanId}`,
+  });
+
+  return updated;
+}
+
 // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
 
 async function getAllUsers(filters, skip, limit) {
@@ -264,8 +355,9 @@ async function changeUserRole(targetUserId, newRole, adminId, ip) {
 
 module.exports = {
   getAllLeads, assignLead,
-  getPendingProperties, approveProperty, rejectProperty,
+  getPendingProperties, approveProperty, rejectProperty, editProperty,
   getPendingKyc, verifyKyc,
   getRevenueSummary,
+  getAllLoans, updateLoanStatus,
   getAllUsers, changeUserRole,
 };

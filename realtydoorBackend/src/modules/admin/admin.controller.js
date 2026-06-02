@@ -113,4 +113,36 @@ async function changeUserRole(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getLeads, assignLead, getPendingProperties, approveProperty, rejectProperty, getPendingKyc, verifyKyc, getRevenue, getAuditLogs, getPartnerMetrics, getUsers, changeUserRole };
+async function editProperty(req, res, next) {
+  try {
+    const property = await service.editProperty(
+      req.params.id, req.body, req.user.id, req.user.name, req.ip,
+    );
+    success(res, property, 'Property updated');
+  } catch (err) { next(err); }
+}
+
+async function getLoans(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.getAllLoans(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function updateLoanStatus(req, res, next) {
+  try {
+    const { status, adminNote } = req.body;
+    const loan = await service.updateLoanStatus(req.params.id, status, adminNote, req.user.id);
+    success(res, loan, 'Loan status updated');
+  } catch (err) { next(err); }
+}
+
+module.exports = {
+  getLeads, assignLead,
+  getPendingProperties, approveProperty, rejectProperty, editProperty,
+  getPendingKyc, verifyKyc,
+  getRevenue, getAuditLogs, getPartnerMetrics,
+  getLoans, updateLoanStatus,
+  getUsers, changeUserRole,
+};

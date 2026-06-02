@@ -29,4 +29,9 @@ router.get('/subscriptions', ctrl.getSubscriptions);
 router.post('/tickets', requirePhone, ctrl.raiseTicket);
 router.patch('/tickets/:id/verify', ctrl.verifyTicket);
 
+// Loan applications
+router.post('/loan',     requirePhone, ctrl.createLoanApplication);
+router.get('/loan',                   ctrl.getMyLoanApplications);
+router.get('/loan/:id',               ctrl.getLoanApplicationById);
+
 module.exports = router;

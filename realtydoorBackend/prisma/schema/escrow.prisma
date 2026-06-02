@@ -8,20 +8,28 @@ model EscrowTransaction {
   leadId            String       @db.ObjectId
   lead              Lead         @relation(fields: [leadId], references: [id])
   buyerId           String       @db.ObjectId
-  razorpayOrderId   String       @unique
-  razorpayPaymentId String?
-  amount            Float
-  currency          String       @default("INR")
-  status            EscrowStatus @default(HELD)
-  heldAt            DateTime     @default(now())
-  releasedAt        DateTime?
-  refundedAt        DateTime?
-  releasedByAdminId String?      @db.ObjectId
+  razorpayOrderId    String       @unique
+  razorpayPaymentId  String?
+  razorpayTransferId String?
+  razorpayRefundId   String?
+
+  amount    Float
+  currency  String       @default("INR")
+
+  status      EscrowStatus @default(PAYMENT_PENDING)
+  heldAt      DateTime?
+  releasedAt  DateTime?
+  refundedAt  DateTime?
+  failedAt    DateTime?
+  cancelledAt DateTime?
+
+  releasedByAdminId String?  @db.ObjectId
   adminNote         String?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([leadId])
-  @@index([status])
   @@index([buyerId])
+  @@index([status])
+  @@index([status, createdAt])
 }

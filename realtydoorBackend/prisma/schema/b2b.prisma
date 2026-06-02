@@ -9,8 +9,15 @@ model B2BConnection {
   buyerPartnerId   String   @db.ObjectId
   buyerPartner     User     @relation("BuyerPartner", fields: [buyerPartnerId], references: [id])
   propertyId       String   @db.ObjectId
-  // status: INTERESTED | CONNECTED | CLOSED
-  status           String   @default("INTERESTED")
+  property         Property @relation(fields: [propertyId], references: [id])
+  status           B2BConnectionStatus @default(INTERESTED)
   message          String?
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([buyerPartnerId, propertyId])
+  @@index([listingPartnerId])
+  @@index([buyerPartnerId])
+  @@index([propertyId])
+  @@index([status])
 }

@@ -8,8 +8,10 @@ async function createOrder(leadId, buyerId, amountInRupees) {
   const lead = await prisma.lead.findUnique({ where: { id: leadId } });
   if (!lead) throw new ApiError(404, 'Lead not found');
 
-  const existing = await prisma.escrowTransaction.findFirst({ where: { leadId, status: 'HELD' } });
-  if (existing) throw new ApiError(400, 'Escrow already held for this lead');
+  const existing = await prisma.escrowTransaction.findFirst({
+    where: { leadId, status: { in: ['HELD', 'PAYMENT_PENDING'] } },
+  });
+  if (existing) throw new ApiError(400, 'An active escrow order already exists for this lead');
 
   const amountInPaise = Math.round(amountInRupees * 100);
   const order = await createEscrowOrder(amountInPaise, `escrow_${leadId}`);
@@ -20,7 +22,7 @@ async function createOrder(leadId, buyerId, amountInRupees) {
       buyerId,
       razorpayOrderId: order.id,
       amount: amountInRupees,
-      status: 'HELD',
+      status: 'PAYMENT_PENDING',
     },
   });
 

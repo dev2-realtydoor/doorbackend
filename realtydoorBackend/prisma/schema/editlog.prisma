@@ -1,0 +1,22 @@
+// ─── PROPERTY EDIT LOG ────────────────────────────────────────────────────────
+// Immutable log of every Admin edit to a property listing (Appendix C.7).
+// Partner can view but CANNOT revert. Written per changed field on PATCH /api/admin/properties/[id].
+
+model PropertyEditLog {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  propertyId   String   @db.ObjectId
+  property     Property @relation(fields: [propertyId], references: [id])
+
+  editedBy     String   @db.ObjectId
+  editedByName String
+  fieldChanged String
+  oldValue     String?
+  newValue     String?
+  editNote     String?
+
+  editedAt     DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([propertyId, editedAt])
+  @@index([editedBy])
+}

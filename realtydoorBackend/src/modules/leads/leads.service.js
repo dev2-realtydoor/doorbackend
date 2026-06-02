@@ -131,9 +131,9 @@ async function closeLead(leadId, partnerId) {
   });
   if (!lead) throw new ApiError(404, 'Lead not found');
 
-  // Rule 6: Escrow payment required before closing
-  const heldEscrow = lead.escrowTransactions.find((e) => e.status === 'HELD');
-  if (!heldEscrow) throw new ApiError(400, 'Escrow payment required before closing a deal (PRD Rule 6)');
+  // Rule 6: A HELD escrow with a captured payment is required before closing
+  const heldEscrow = lead.escrowTransactions.find((e) => e.status === 'HELD' && e.razorpayPaymentId);
+  if (!heldEscrow) throw new ApiError(400, 'Escrow payment must be captured (HELD) before closing a deal (PRD Rule 6)');
 
   // Rule 7: CLOSED is irreversible by partner
   if (lead.status === 'CLOSED') throw new ApiError(400, 'Lead is already closed');

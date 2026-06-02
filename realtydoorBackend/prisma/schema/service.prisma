@@ -30,8 +30,7 @@ model UserSubscription {
   service           Service  @relation(fields: [serviceId], references: [id])
   razorpayOrderId   String   @unique
   razorpayPaymentId String?
-  // paymentStatus: PENDING | SUCCESS | FAILED | REFUNDED
-  paymentStatus     String
+  paymentStatus     PaymentStatus @default(PENDING)
   amountPaid        Float
   currency          String   @default("INR")
   startDate         DateTime @default(now())
@@ -72,4 +71,7 @@ model ServiceTicket {
   @@index([userId])
   @@index([subscriptionId])
   @@index([status])
+  @@index([status, createdAt])
+  @@index([userId, status])
+  @@index([subscriptionId, status])
 }

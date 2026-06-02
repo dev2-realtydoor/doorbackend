@@ -60,6 +60,7 @@ async function verifyPhoneOtp(userId, otp) {
     where: { id: userId },
     data: {
       phoneVerified:       true,
+      phoneVerifiedAt:     new Date(),
       phoneOtp:            null,
       phoneOtpExpiresAt:   null,
       phoneOtpAttempts:    0,
@@ -126,4 +127,24 @@ async function verifyTicket(userId, ticketId) {
   });
 }
 
-module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getDocuments, uploadDocument, getSubscriptions, raiseTicket, verifyTicket };
+async function createLoanApplication(userId, data) {
+  return prisma.loanApplication.create({
+    data: { ...data, userId },
+  });
+}
+
+async function getMyLoanApplications(userId) {
+  return prisma.loanApplication.findMany({
+    where: { userId },
+    include: { property: { select: { title: true, slug: true, city: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+async function getLoanApplicationById(userId, loanId) {
+  const loan = await prisma.loanApplication.findFirst({ where: { id: loanId, userId } });
+  if (!loan) throw new ApiError(404, 'Loan application not found');
+  return loan;
+}
+
+module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getDocuments, uploadDocument, getSubscriptions, raiseTicket, verifyTicket, createLoanApplication, getMyLoanApplications, getLoanApplicationById };
